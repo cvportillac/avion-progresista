@@ -254,15 +254,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <body>
 <div class="app">
 
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-title">✈️ Avión Progresista</div>
-      <div class="topbar-sub">Iván Cepeda &amp; Aída Quilcué 2026-2030</div>
+  <div class="topbar" style="flex-direction:column;align-items:stretch;padding:10px 14px 8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="min-width:0;flex:1">
+        <div class="topbar-title">✈️ Juego El Avión Progresista</div>
+        <div class="topbar-sub" style="margin-top:3px;white-space:normal;line-height:1.4">
+          Plan de Gobierno &nbsp;·&nbsp;
+          <strong style="color:var(--ph-azul)">Iván Cepeda</strong> Presidente &amp;
+          <strong style="color:var(--ph-morado)">Aída Quilcué</strong> Vicepresidenta
+          <span style="color:var(--ph-rojo);font-weight:500"> 2026-2030</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+        <span class="live-dot" id="live-dot" style="display:none"></span>
+        <span id="conn-label" style="font-size:10px;color:var(--muted)"></span>
+        <button id="btn-config" class="btn-ghost" style="padding:6px 9px;font-size:13px;display:none" onclick="showTab('config')" title="Configurar">⚙️</button>
+        <!-- Botón clandestino: invisible, solo el organizador sabe que existe -->
+        <div id="secret-trigger" onclick="handleSecretTap()" style="width:18px;height:18px;cursor:pointer;opacity:0;user-select:none" title=""></div>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <span class="live-dot" id="live-dot" style="display:none"></span>
-      <span id="conn-label" style="font-size:11px;color:var(--muted)"></span>
-      <button id="btn-config" class="btn-ghost" style="padding:7px 10px;font-size:13px;display:none" onclick="showTab('config')" title="Configurar">⚙️</button>
+    <!-- Barra de colores PH -->
+    <div style="display:flex;height:3px;margin-top:8px;border-radius:2px;overflow:hidden">
+      <div style="flex:1;background:var(--ph-azul)"></div>
+      <div style="flex:1;background:var(--ph-rojo)"></div>
+      <div style="flex:1;background:var(--ph-naranja)"></div>
+      <div style="flex:1;background:var(--ph-amarillo)"></div>
+      <div style="flex:1;background:var(--ph-verde)"></div>
+      <div style="flex:1;background:var(--ph-morado)"></div>
     </div>
   </div>
 
@@ -391,18 +409,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <!-- SECCIÓN ORGANIZADOR -->
       <div style="margin-top:24px;padding-top:16px;border-top:.5px solid var(--bord)">
 
-        <!-- Login organizador (visible si no autenticado) -->
+        <!-- Login organizador: completamente invisible para participantes -->
         <div id="org-login-section">
-          <div style="text-align:center;margin-bottom:12px">
-            <button onclick="toggleOrgLogin()" style="background:none;border:.5px solid var(--bord);border-radius:var(--rads);padding:8px 16px;font-size:12px;cursor:pointer;font-family:var(--font);color:var(--muted)">🔒 Acceso organizador</button>
-          </div>
-          <div id="org-login-form" style="display:none;background:var(--g50);border-radius:var(--rads);padding:14px;text-align:center">
-            <div style="font-size:13px;font-weight:500;color:var(--ph-azul);margin-bottom:10px">Contraseña del organizador</div>
-            <input type="password" id="lock-pwd" placeholder="••••••••"
-              style="width:100%;max-width:240px;padding:10px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:15px;background:var(--surf);color:var(--text);font-family:var(--font);text-align:center;display:block;margin:0 auto 8px"
-              onkeydown="if(event.key==='Enter')verificarClave()">
-            <div id="lock-error" style="font-size:12px;color:var(--ph-rojo);min-height:16px;margin-bottom:8px"></div>
-            <button onclick="verificarClave()" style="background:var(--ph-azul);color:#fff;border:none;border-radius:var(--rads);padding:10px 24px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font)">Entrar →</button>
+          <!-- Modal oculto que solo aparece tras 5 taps en el punto secreto -->
+          <div id="org-login-form" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:none;align-items:center;justify-content:center;padding:16px">
+            <div style="background:var(--surf);border-radius:var(--rad);padding:24px;max-width:320px;width:100%;text-align:center;border:.5px solid var(--bord)">
+              <div style="font-size:24px;margin-bottom:8px">🛡️</div>
+              <div style="font-size:15px;font-weight:600;color:var(--ph-azul);margin-bottom:4px">Panel de administración</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Acceso restringido</div>
+              <div style="margin-bottom:10px">
+                <label style="font-size:11px;color:var(--muted);font-weight:500;display:block;margin-bottom:5px;text-align:left">USUARIO</label>
+                <input type="text" id="lock-user" placeholder="Usuario"
+                  style="width:100%;padding:10px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:14px;background:var(--bg);color:var(--text);font-family:var(--font)"
+                  onkeydown="if(event.key==='Enter')document.getElementById('lock-pwd').focus()">
+              </div>
+              <div style="margin-bottom:10px">
+                <label style="font-size:11px;color:var(--muted);font-weight:500;display:block;margin-bottom:5px;text-align:left">CONTRASEÑA</label>
+                <input type="password" id="lock-pwd" placeholder="••••••••"
+                  style="width:100%;padding:10px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:14px;background:var(--bg);color:var(--text);font-family:var(--font)"
+                  onkeydown="if(event.key==='Enter')verificarClave()">
+              </div>
+              <div id="lock-error" style="font-size:12px;color:var(--ph-rojo);min-height:16px;margin-bottom:10px"></div>
+              <div style="display:flex;gap:8px">
+                <button onclick="cerrarLoginModal()" style="flex:1;padding:10px;background:none;border:.5px solid var(--bord);border-radius:var(--rads);font-size:13px;cursor:pointer;font-family:var(--font);color:var(--muted)">Cancelar</button>
+                <button onclick="verificarClave()" style="flex:2;padding:10px;background:var(--ph-azul);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font)">Ingresar →</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -425,8 +457,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div id="queue-list" style="display:none;margin-top:6px"></div>
           </div>
 
-          <!-- Borrar datos -->
-          <button class="btn-reset" onclick="resetearDatos()">🗑️ Borrar todos los registros de prueba</button>
+          <!-- Borrar datos: solo desde consola Firebase para mayor seguridad -->
+          <div style="background:var(--g50);border-radius:var(--rads);padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.5">
+            ℹ️ Para borrar registros de prueba: ve a <strong>console.firebase.google.com</strong> → Realtime Database → selecciona <code>avion_progresista</code> → clic en ✕
+          </div>
         </div>
 
       </div>
@@ -598,61 +632,61 @@ async function dbSet(path,val){
 }
 
 // ── AUTENTICACIÓN ORGANIZADOR ─────────────────────────
-const CLAVE_ORG='@parche_#';
-let orgAutenticado=false;
+const ORG_USER = 'organizador';
+const ORG_CLAVE = '@parche_#';
+let orgAutenticado = false;
+let secretTaps = 0;
+let secretTimer = null;
 
-function toggleOrgLogin(){
-  const form=document.getElementById('org-login-form');
-  const open=form.style.display==='none';
-  form.style.display=open?'block':'none';
-  if(open) setTimeout(()=>document.getElementById('lock-pwd').focus(),50);
+// 5 toques rápidos en el punto invisible del topbar abren el modal
+function handleSecretTap(){
+  secretTaps++;
+  clearTimeout(secretTimer);
+  if(secretTaps >= 5){
+    secretTaps = 0;
+    abrirLoginModal();
+  } else {
+    secretTimer = setTimeout(()=>{ secretTaps=0; }, 2000);
+  }
 }
 
-function showOrgLogin(){
-  showTab('dashboard');
-  setTimeout(()=>{
-    document.getElementById('org-login-form').style.display='block';
-    document.getElementById('lock-pwd').focus();
-  },100);
+function abrirLoginModal(){
+  const form = document.getElementById('org-login-form');
+  form.style.display = 'flex';
+  setTimeout(()=>{ const u=document.getElementById('lock-user'); if(u) u.focus(); }, 100);
+}
+
+function cerrarLoginModal(){
+  document.getElementById('org-login-form').style.display = 'none';
+  document.getElementById('lock-error').textContent = '';
+  document.getElementById('lock-user').value = '';
+  document.getElementById('lock-pwd').value = '';
 }
 
 function verificarClave(){
-  const pwd=document.getElementById('lock-pwd').value;
-  const err=document.getElementById('lock-error');
-  if(pwd===CLAVE_ORG){
-    orgAutenticado=true;
-    err.textContent='';
-    document.getElementById('lock-pwd').value='';
-    document.getElementById('org-login-section').style.display='none';
-    document.getElementById('org-panel').style.display='block';
-    document.getElementById('btn-config').style.display='inline-block';
+  const user = (document.getElementById('lock-user').value||'').trim();
+  const pwd  = document.getElementById('lock-pwd').value;
+  const err  = document.getElementById('lock-error');
+  if(user === ORG_USER && pwd === ORG_CLAVE){
+    orgAutenticado = true;
+    err.textContent = '';
+    cerrarLoginModal();
+    document.getElementById('org-panel').style.display = 'block';
+    document.getElementById('org-login-section').style.display = 'none';
+    document.getElementById('btn-config').style.display = 'inline-block';
     renderDashboard();
   } else {
-    err.textContent='Contraseña incorrecta. Intenta de nuevo.';
-    document.getElementById('lock-pwd').value='';
+    err.textContent = 'Usuario o contraseña incorrectos.';
+    document.getElementById('lock-pwd').value = '';
     document.getElementById('lock-pwd').focus();
   }
 }
 
 function cerrarSesionOrg(){
-  orgAutenticado=false;
-  document.getElementById('org-panel').style.display='none';
-  document.getElementById('org-login-section').style.display='block';
-  document.getElementById('org-login-form').style.display='none';
-  document.getElementById('btn-config').style.display='none';
-}
-
-async function resetearDatos(){
-  if(!confirm('¿Borrar TODOS los registros? Esta acción no se puede deshacer.')) return;
-  if(db){
-    await dbRef.set(null);
-  } else {
-    participantes={};
-    try{localStorage.removeItem('avion_local');}catch(e){}
-  }
-  participantes={};
-  renderDashboard();
-  alert('✅ Todos los registros han sido eliminados. La app está lista para el evento.');
+  orgAutenticado = false;
+  document.getElementById('org-panel').style.display = 'none';
+  document.getElementById('org-login-section').style.display = 'block';
+  document.getElementById('btn-config').style.display = 'none';
 }
 
 // ── TABS ──────────────────────────────────────────────
@@ -1128,16 +1162,19 @@ function toggleSug(gi){
 
 // ── INIT ──────────────────────────────────────────────
 (function(){
-  const cfg=loadConfig();
-  if(cfg) initFirebase(cfg);
-  else {
-    try{const s=localStorage.getItem('avion_local');if(s)participantes=JSON.parse(s)||{};}catch(e){}
-    setInterval(()=>{
-      if(!db){
-        try{localStorage.setItem('avion_local',JSON.stringify(participantes));}catch(e){}
-      }
-    },5000);
-  }
+  // Config Firebase incrustado — conecta automáticamente en todos los dispositivos
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyC0ONwWRo377v5X9UNNdfXLSB1WC7cU_e0",
+    authDomain: "avion-progresista.firebaseapp.com",
+    databaseURL: "https://avion-progresista-default-rtdb.firebaseio.com",
+    projectId: "avion-progresista",
+    storageBucket: "avion-progresista.firebasestorage.app",
+    messagingSenderId: "1000377993071",
+    appId: "1:1000377993071:web:010bd6564480cb0859ca9a"
+  };
+  // Intentar primero config manual guardada, sino usar la incrustada
+  const saved = loadConfig();
+  initFirebase(saved || FIREBASE_CONFIG);
 })();
 </script>
 </body>
