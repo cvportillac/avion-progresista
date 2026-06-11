@@ -206,8 +206,36 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .conn-dot.err{background:var(--r400)}
 
 .empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
+.lock-screen{padding:32px 16px;text-align:center}
+.lock-icon{font-size:48px;display:block;margin-bottom:16px}
+.lock-title{font-size:18px;font-weight:500;color:var(--text);margin-bottom:6px}
+.lock-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.lock-input{width:100%;max-width:280px;padding:11px 14px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:16px;background:var(--bg);color:var(--text);font-family:var(--font);text-align:center;letter-spacing:2px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
+.lock-input:focus{outline:none;border-color:var(--ph-azul);box-shadow:0 0 0 3px #E6EEF8}
+.lock-error{font-size:12px;color:var(--ph-rojo);margin-bottom:10px;display:none}
+.lock-error.visible{display:block}
+.btn-reset{width:100%;padding:12px;background:none;border:.5px solid var(--ph-rojo);border-radius:var(--rads);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);color:var(--ph-rojo);margin-top:8px}
+.btn-reset:active{background:var(--r50)}
+.org-bar{background:var(--ph-azul);padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.org-bar-label{font-size:12px;color:rgba(255,255,255,0.9);font-weight:500}
+.btn-lock{padding:5px 10px;background:rgba(255,255,255,0.15);border:.5px solid rgba(255,255,255,0.3);border-radius:var(--rads);font-size:11px;cursor:pointer;font-family:var(--font);color:#fff}
 .section-divider{font-size:11px;font-weight:500;color:var(--muted);margin:16px 0 8px;letter-spacing:.4px;text-transform:uppercase}
 .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* LOCK SCREEN */
+.lock-screen{padding:32px 16px;text-align:center}
+.lock-icon{font-size:48px;margin-bottom:12px;display:block}
+.lock-title{font-size:18px;font-weight:600;color:var(--ph-azul);margin-bottom:6px}
+.lock-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.lock-input{width:100%;max-width:280px;padding:11px 14px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:16px;background:var(--bg);color:var(--text);font-family:var(--font);text-align:center;letter-spacing:2px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
+.lock-input:focus{outline:none;border-color:var(--ph-azul);box-shadow:0 0 0 3px #E6EEF8}
+.lock-error{font-size:12px;color:var(--ph-rojo);margin-bottom:10px;min-height:16px}
+.btn-lock{padding:12px 32px;background:var(--ph-azul);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font)}
+.btn-lock:active{background:var(--ph-morado)}
+.btn-logout{padding:6px 12px;background:none;border:.5px solid var(--bord);border-radius:var(--rads);font-size:11px;cursor:pointer;font-family:var(--font);color:var(--muted)}
+.btn-danger{padding:10px 16px;background:none;border:.5px solid var(--ph-rojo);border-radius:var(--rads);font-size:13px;cursor:pointer;font-family:var(--font);color:var(--ph-rojo);width:100%;margin-top:8px}
+.btn-danger:active{background:var(--r50)}
+.dash-toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dash-toprow-title{font-size:13px;font-weight:500;color:var(--ph-azul)}
 @media(max-width:420px){.demo-grid{grid-template-columns:1fr}}
 .donut-wrap{display:flex;align-items:center;gap:12px}
 .donut-svg{flex-shrink:0}
@@ -234,7 +262,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div style="display:flex;align-items:center;gap:6px">
       <span class="live-dot" id="live-dot" style="display:none"></span>
       <span id="conn-label" style="font-size:11px;color:var(--muted)"></span>
-      <button class="btn-ghost" style="padding:7px 10px;font-size:13px" onclick="showTab('config')" title="Configurar">⚙️</button>
+      <button id="btn-config" class="btn-ghost" style="padding:7px 10px;font-size:13px;display:none" onclick="showTab('config')" title="Configurar">⚙️</button>
     </div>
   </div>
 
@@ -242,6 +270,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <button class="tab active" id="tab-btn-juego" onclick="showTab('juego')">🎮 Jugar</button>
     <button class="tab" id="tab-btn-dashboard" onclick="showTab('dashboard')">📊 Resultados</button>
   </div>
+
 
   <!-- ══ JUEGO ══ -->
   <div id="screen-juego" class="screen active">
@@ -313,58 +342,95 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 
   <!-- ══ DASHBOARD ══ -->
-  <div id="screen-dashboard" class="screen">
+  <div id="screen-dashboard" class="screen" style="padding:0">
 
-    <div class="stats-grid">
-      <div class="stat"><div class="stat-val" id="d-total">0</div><div class="stat-lbl">Registrados</div></div>
-      <div class="stat"><div class="stat-val" id="d-pendientes" style="color:var(--ph-naranja)">0</div><div class="stat-lbl">Pendientes</div></div>
-      <div class="stat"><div class="stat-val" id="d-completos" style="color:var(--ph-verde)">0</div><div class="stat-lbl">Completaron</div></div>
-      <div class="stat"><div class="stat-val" id="d-votos">0</div><div class="stat-lbl">Votos</div></div>
-    </div>
+    <!-- RESULTADOS PÚBLICOS — todos los ven -->
+    <div style="padding:16px">
 
-    <!-- Cola compacta: solo visible si hay pendientes -->
-    <div id="queue-compact" style="display:none;margin-bottom:10px">
-      <div style="background:var(--a50);border:.5px solid var(--a200);border-radius:var(--rads);padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="toggleQueue()">
-        <span style="font-size:13px;font-weight:500;color:var(--a400)">⏳ Esperando aprobación</span>
-        <span style="display:flex;align-items:center;gap:6px">
-          <span class="badge-count" id="badge-pendientes">0</span>
-          <span id="queue-chev" style="font-size:13px;color:var(--a400);transition:transform .2s">▾</span>
-        </span>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-val" id="d-total">0</div><div class="stat-lbl">Registrados</div></div>
+        <div class="stat"><div class="stat-val" id="d-pendientes" style="color:var(--ph-naranja)">0</div><div class="stat-lbl">Pendientes</div></div>
+        <div class="stat"><div class="stat-val" id="d-completos" style="color:var(--ph-verde)">0</div><div class="stat-lbl">Completaron</div></div>
+        <div class="stat"><div class="stat-val" id="d-votos">0</div><div class="stat-lbl">Votos</div></div>
       </div>
-      <div id="queue-list" style="display:none;margin-top:6px"></div>
-    </div>
 
-    <div id="demo-section" style="display:none">
-      <div class="section-divider">Perfil de participantes</div>
-      <div class="demo-grid">
-        <div class="card" style="margin-bottom:0">
-          <div class="card-title" style="font-size:13px;margin-bottom:10px">Género</div>
-          <div id="chart-genero"></div>
+      <!-- Perfil demográfico -->
+      <div id="demo-section" style="display:none">
+        <div class="section-divider">Perfil de participantes</div>
+        <div class="demo-grid">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title" style="font-size:13px;margin-bottom:10px">Género</div>
+            <div id="chart-genero"></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title" style="font-size:13px;margin-bottom:10px">Rango de edad</div>
+            <div id="chart-edad"></div>
+          </div>
         </div>
-        <div class="card" style="margin-bottom:0">
-          <div class="card-title" style="font-size:13px;margin-bottom:10px">Rango de edad</div>
-          <div id="chart-edad"></div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-title" style="font-size:13px;margin-bottom:10px">Municipios y ciudades</div>
+          <div id="chart-municipio"></div>
         </div>
       </div>
-      <div class="card" style="margin-top:12px">
-        <div class="card-title" style="font-size:13px;margin-bottom:10px">Municipios y ciudades</div>
-        <div id="chart-municipio"></div>
+
+      <!-- Resultados por eje -->
+      <div class="section-divider" style="margin-top:16px">Resultados por eje temático</div>
+      <div id="dash-content"></div>
+      <div id="dash-empty" class="empty" style="display:none">
+        <div style="font-size:32px;margin-bottom:8px">🗳️</div>
+        Aún no hay votos registrados.<br>
+        <span style="font-size:12px">Los resultados aparecerán aquí en tiempo real.</span>
+      </div>
+
+      <!-- Propuestas sugeridas -->
+      <div class="sugeridas-section" id="sugeridas-section" style="display:none">
+        <div class="section-divider">Propuestas sugeridas por participantes</div>
+        <div id="sugeridas-content"></div>
+      </div>
+
+      <!-- SECCIÓN ORGANIZADOR -->
+      <div style="margin-top:24px;padding-top:16px;border-top:.5px solid var(--bord)">
+
+        <!-- Login organizador (visible si no autenticado) -->
+        <div id="org-login-section">
+          <div style="text-align:center;margin-bottom:12px">
+            <button onclick="toggleOrgLogin()" style="background:none;border:.5px solid var(--bord);border-radius:var(--rads);padding:8px 16px;font-size:12px;cursor:pointer;font-family:var(--font);color:var(--muted)">🔒 Acceso organizador</button>
+          </div>
+          <div id="org-login-form" style="display:none;background:var(--g50);border-radius:var(--rads);padding:14px;text-align:center">
+            <div style="font-size:13px;font-weight:500;color:var(--ph-azul);margin-bottom:10px">Contraseña del organizador</div>
+            <input type="password" id="lock-pwd" placeholder="••••••••"
+              style="width:100%;max-width:240px;padding:10px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:15px;background:var(--surf);color:var(--text);font-family:var(--font);text-align:center;display:block;margin:0 auto 8px"
+              onkeydown="if(event.key==='Enter')verificarClave()">
+            <div id="lock-error" style="font-size:12px;color:var(--ph-rojo);min-height:16px;margin-bottom:8px"></div>
+            <button onclick="verificarClave()" style="background:var(--ph-azul);color:#fff;border:none;border-radius:var(--rads);padding:10px 24px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font)">Entrar →</button>
+          </div>
+        </div>
+
+        <!-- Panel organizador (visible tras autenticación) -->
+        <div id="org-panel" style="display:none">
+          <div class="org-bar" style="border-radius:var(--rads);margin-bottom:12px">
+            <span class="org-bar-label">🛡️ Organizador activo</span>
+            <button class="btn-lock" onclick="cerrarSesionOrg()">🔒 Salir</button>
+          </div>
+
+          <!-- Cola aprobación -->
+          <div id="queue-compact" style="display:none;margin-bottom:10px">
+            <div style="background:var(--a50);border:.5px solid var(--a200);border-radius:var(--rads);padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="toggleQueue()">
+              <span style="font-size:13px;font-weight:500;color:var(--a400)">⏳ Esperando aprobación</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="badge-count" id="badge-pendientes">0</span>
+                <span id="queue-chev" style="font-size:13px;color:var(--a400);transition:transform .2s">▾</span>
+              </span>
+            </div>
+            <div id="queue-list" style="display:none;margin-top:6px"></div>
+          </div>
+
+          <!-- Borrar datos -->
+          <button class="btn-reset" onclick="resetearDatos()">🗑️ Borrar todos los registros de prueba</button>
+        </div>
+
       </div>
     </div>
-
-    <div class="section-divider" style="margin-top:16px">Resultados por eje temático</div>
-    <div id="dash-content"></div>
-    <div id="dash-empty" class="empty" style="display:none">
-      <div style="font-size:32px;margin-bottom:8px">🗳️</div>
-      Aún no hay votos registrados.<br>
-      <span style="font-size:12px">Los resultados aparecerán aquí en tiempo real.</span>
-    </div>
-
-    <div class="sugeridas-section" id="sugeridas-section" style="display:none">
-      <div class="section-divider">Propuestas sugeridas por participantes</div>
-      <div id="sugeridas-content"></div>
-    </div>
-
   </div>
 
   <!-- ══ CONFIG ══ -->
@@ -529,6 +595,64 @@ async function dbSet(path,val){
     obj[parts[parts.length-1]]=val;
     try{localStorage.setItem('avion_local',JSON.stringify(participantes))}catch(e){}
   }
+}
+
+// ── AUTENTICACIÓN ORGANIZADOR ─────────────────────────
+const CLAVE_ORG='@parche_#';
+let orgAutenticado=false;
+
+function toggleOrgLogin(){
+  const form=document.getElementById('org-login-form');
+  const open=form.style.display==='none';
+  form.style.display=open?'block':'none';
+  if(open) setTimeout(()=>document.getElementById('lock-pwd').focus(),50);
+}
+
+function showOrgLogin(){
+  showTab('dashboard');
+  setTimeout(()=>{
+    document.getElementById('org-login-form').style.display='block';
+    document.getElementById('lock-pwd').focus();
+  },100);
+}
+
+function verificarClave(){
+  const pwd=document.getElementById('lock-pwd').value;
+  const err=document.getElementById('lock-error');
+  if(pwd===CLAVE_ORG){
+    orgAutenticado=true;
+    err.textContent='';
+    document.getElementById('lock-pwd').value='';
+    document.getElementById('org-login-section').style.display='none';
+    document.getElementById('org-panel').style.display='block';
+    document.getElementById('btn-config').style.display='inline-block';
+    renderDashboard();
+  } else {
+    err.textContent='Contraseña incorrecta. Intenta de nuevo.';
+    document.getElementById('lock-pwd').value='';
+    document.getElementById('lock-pwd').focus();
+  }
+}
+
+function cerrarSesionOrg(){
+  orgAutenticado=false;
+  document.getElementById('org-panel').style.display='none';
+  document.getElementById('org-login-section').style.display='block';
+  document.getElementById('org-login-form').style.display='none';
+  document.getElementById('btn-config').style.display='none';
+}
+
+async function resetearDatos(){
+  if(!confirm('¿Borrar TODOS los registros? Esta acción no se puede deshacer.')) return;
+  if(db){
+    await dbRef.set(null);
+  } else {
+    participantes={};
+    try{localStorage.removeItem('avion_local');}catch(e){}
+  }
+  participantes={};
+  renderDashboard();
+  alert('✅ Todos los registros han sido eliminados. La app está lista para el evento.');
 }
 
 // ── TABS ──────────────────────────────────────────────
@@ -821,16 +945,18 @@ function renderDashboard(){
   document.getElementById('d-completos').textContent=completos.length;
   document.getElementById('d-votos').textContent=totalV;
 
+  // Cola: solo visible para organizador autenticado
   const badge=document.getElementById('badge-pendientes');
-  badge.textContent=pendientes.length;
-  badge.className='badge-count'+(pendientes.length===0?' empty':'');
-
-  // Cola compacta: ocultar si no hay pendientes
+  if(badge){
+    badge.textContent=pendientes.length;
+    badge.className='badge-count'+(pendientes.length===0?' empty':'');
+  }
   const qCompact=document.getElementById('queue-compact');
-  qCompact.style.display=pendientes.length>0?'block':'none';
-
+  if(qCompact){
+    qCompact.style.display=(orgAutenticado&&pendientes.length>0)?'block':'none';
+  }
   const qEl=document.getElementById('queue-list');
-  if(pendientes.length>0){
+  if(qEl&&orgAutenticado&&pendientes.length>0){
     qEl.innerHTML=pendientes.map(p=>{
       const ini=(p.nombre||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       const emailStr=p.email?`<div class="queue-email">📧 ${p.email}</div>`:'';
