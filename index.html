@@ -442,6 +442,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div class="card-title" style="font-size:13px;margin-bottom:10px">Municipios y ciudades</div>
           <div id="chart-municipio"></div>
         </div>
+        <div class="card" id="card-sector" style="margin-top:12px;display:none">
+          <div class="card-title" style="font-size:13px;margin-bottom:10px">Sectores y barrios</div>
+          <div id="chart-sector"></div>
+        </div>
       </div>
 
       <!-- Resultados por eje -->
@@ -1134,6 +1138,18 @@ function renderDashboard(){
     aprobados.forEach(p=>{if(p.municipio) mcounts[p.municipio]=(mcounts[p.municipio]||0)+1;});
     const mdata=Object.entries(mcounts).map(([label,value])=>({label,value}));
     renderHBar('chart-municipio', mdata, '#003DA5');
+
+    // Sector/Barrio chart
+    const scounts={};
+    aprobados.forEach(p=>{if(p.barrio&&p.barrio.trim()) scounts[p.barrio]=(scounts[p.barrio]||0)+1;});
+    const sdata=Object.entries(scounts).map(([label,value])=>({label,value}));
+    const cardSector=document.getElementById('card-sector');
+    if(sdata.length>0){
+      cardSector.style.display='block';
+      renderHBar('chart-sector', sdata, '#6A2D8F');
+    } else {
+      cardSector.style.display='none';
+    }
   } else {
     demoSec.style.display='none';
   }
