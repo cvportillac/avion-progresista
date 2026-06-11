@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title> Avioncito Progresista — Programa 2026-2030</title>
+<title>Avión Progresista — Programa 2026-2030</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
@@ -254,27 +254,81 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <body>
 <div class="app">
 
-  <div class="topbar" style="flex-direction:column;align-items:stretch;padding:10px 14px 8px">
+  <div class="topbar" style="flex-direction:column;align-items:stretch;padding:8px 14px 6px">
+
+    <!-- Fila única: título + rayuela+símbolos a la derecha -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+
+      <!-- Título y candidatos -->
       <div style="min-width:0;flex:1">
-        <div class="topbar-title">✈️ Juego: El Avioncito Progresista</div>
-        <div class="topbar-sub" style="margin-top:3px;white-space:normal;line-height:1.4">
-          Plan de Gobierno &nbsp;·&nbsp;
-          <strong style="color:var(--ph-azul)">Iván Cepeda</strong> Presidente &amp;
-          <strong style="color:var(--ph-morado)">Aída Quilcué</strong> Vicepresidenta
-          <span style="color:var(--ph-rojo);font-weight:500"> 2026-2030</span>
+        <div class="topbar-title" style="font-size:clamp(14px,4vw,21px);line-height:1.1">✈️ Juego El Avión Progresista</div>
+        <div style="margin-top:4px;line-height:1.5">
+          <span style="font-size:clamp(11px,3vw,15px);font-weight:700;color:var(--ph-azul)">Iván Cepeda</span>
+          <span style="font-size:clamp(9px,2vw,11px);color:var(--muted)"> Presidente &amp; </span>
+          <span style="font-size:clamp(11px,3vw,15px);font-weight:700;color:var(--ph-morado)">Aída Quilcué</span>
+          <span style="font-size:clamp(9px,2vw,11px);color:var(--muted)"> Vicepresidenta </span>
+          <span style="font-size:clamp(10px,2.5vw,12px);font-weight:700;color:var(--ph-rojo)">2026-2030</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-        <span class="live-dot" id="live-dot" style="display:none"></span>
-        <span id="conn-label" style="font-size:10px;color:var(--muted)"></span>
-        <button id="btn-config" class="btn-ghost" style="padding:6px 9px;font-size:13px;display:none" onclick="showTab('config')" title="Configurar">⚙️</button>
-        <!-- Botón clandestino: invisible, solo el organizador sabe que existe -->
-        <div id="secret-trigger" onclick="handleSecretTap()" style="width:18px;height:18px;cursor:pointer;opacity:0;user-select:none" title=""></div>
+
+      <!-- Rayuela horizontal + símbolos + controles — todo a la derecha -->
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <!-- Fila superior: símbolos izq + rayuela + símbolos der -->
+        <div style="display:flex;align-items:center;gap:3px">
+          <svg width="200" height="26" viewBox="0 0 200 26" style="display:block">
+            <!-- símbolos izquierda -->
+            <text x="0"  y="15" font-size="11" fill="#003DA5" opacity="0.45" font-family="sans-serif">♪</text>
+            <text x="12" y="10" font-size="8"  fill="#E31837" opacity="0.4"  font-family="sans-serif">✦</text>
+            <text x="22" y="18" font-size="10" fill="#00923F" opacity="0.4"  font-family="sans-serif">♥</text>
+            <!-- rayuela 9 casillas -->
+            <!-- 1 solo -->
+            <rect x="34" y="3" width="13" height="20" rx="3" fill="#003DA5"/>
+            <text x="40" y="16" text-anchor="middle" font-size="7" font-weight="500" fill="#fff" font-family="sans-serif">1</text>
+            <!-- 2+3 par -->
+            <rect x="49" y="0"  width="13" height="12" rx="2" fill="#E31837"/>
+            <text x="55" y="9"  text-anchor="middle" font-size="6" font-weight="500" fill="#fff" font-family="sans-serif">2</text>
+            <rect x="49" y="14" width="13" height="12" rx="2" fill="#F47920"/>
+            <text x="55" y="23" text-anchor="middle" font-size="6" font-weight="500" fill="#fff" font-family="sans-serif">3</text>
+            <!-- 4 solo -->
+            <rect x="64" y="3" width="13" height="20" rx="3" fill="#00923F"/>
+            <text x="70" y="16" text-anchor="middle" font-size="7" font-weight="500" fill="#fff" font-family="sans-serif">4</text>
+            <!-- 5+6 par -->
+            <rect x="79" y="0"  width="13" height="12" rx="2" fill="#F5C400"/>
+            <text x="85" y="9"  text-anchor="middle" font-size="6" font-weight="500" fill="#1a1a1a" font-family="sans-serif">5</text>
+            <rect x="79" y="14" width="13" height="12" rx="2" fill="#6A2D8F"/>
+            <text x="85" y="23" text-anchor="middle" font-size="6" font-weight="500" fill="#fff" font-family="sans-serif">6</text>
+            <!-- 7 solo -->
+            <rect x="94" y="3" width="13" height="20" rx="3" fill="#E31837"/>
+            <text x="100" y="16" text-anchor="middle" font-size="7" font-weight="500" fill="#fff" font-family="sans-serif">7</text>
+            <!-- 8+9 par (9 redondeado) -->
+            <rect x="109" y="0"  width="13" height="12" rx="2" fill="#003DA5"/>
+            <text x="115" y="9"  text-anchor="middle" font-size="6" font-weight="500" fill="#fff" font-family="sans-serif">8</text>
+            <rect x="109" y="14" width="13" height="12" rx="6" fill="#00923F"/>
+            <text x="115" y="23" text-anchor="middle" font-size="6" font-weight="500" fill="#fff" font-family="sans-serif">9</text>
+            <!-- estrella -->
+            <text x="126" y="16" text-anchor="middle" font-size="12" fill="#F5C400" font-family="sans-serif">★</text>
+            <!-- símbolos derecha -->
+            <text x="140" y="16" font-size="11" fill="#F47920" opacity="0.45" font-family="sans-serif">♫</text>
+            <text x="153" y="10" font-size="8"  fill="#6A2D8F" opacity="0.4"  font-family="sans-serif">✿</text>
+            <text x="163" y="19" font-size="9"  fill="#003DA5" opacity="0.4"  font-family="sans-serif">♪</text>
+            <circle cx="178" cy="11" r="5" fill="none" stroke="#F47920" stroke-width="1.5" opacity="0.38"/>
+            <circle cx="178" cy="11" r="2" fill="#F47920" opacity="0.32"/>
+            <text x="188" y="20" font-size="8"  fill="#E31837" opacity="0.38" font-family="sans-serif">✦</text>
+          </svg>
+        </div>
+        <!-- controles en la misma fila abajo -->
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="live-dot" id="live-dot" style="display:none"></span>
+          <span id="conn-label" style="font-size:9px;color:var(--muted)"></span>
+          <button id="btn-config" class="btn-ghost" style="padding:4px 7px;font-size:11px;display:none" onclick="showTab('config')" title="Configurar">⚙️</button>
+          <div id="secret-trigger" onclick="handleSecretTap()" style="width:16px;height:16px;cursor:pointer;opacity:0;user-select:none" title=""></div>
+        </div>
       </div>
+
     </div>
-    <!-- Barra de colores PH -->
-    <div style="display:flex;height:3px;margin-top:8px;border-radius:2px;overflow:hidden">
+
+    <!-- Barra colores PH -->
+    <div style="display:flex;height:3px;margin-top:6px;border-radius:2px;overflow:hidden">
       <div style="flex:1;background:var(--ph-azul)"></div>
       <div style="flex:1;background:var(--ph-rojo)"></div>
       <div style="flex:1;background:var(--ph-naranja)"></div>
