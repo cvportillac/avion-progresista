@@ -857,20 +857,41 @@ function renderGrid(){
     }
     const num=Object.values(participantes).filter(p=>p.completado).length;
     const nombre=current.nombre||'Participante';
+    const primerNombre=nombre.split(' ')[0];
     document.getElementById('meta-container').innerHTML=`
-      <div class="meta-card" style="padding:28px 20px">
-        <span class="meta-trophy">🎉</span>
-        <div class="meta-title" style="font-size:22px;margin-bottom:8px">¡Llegaste a la meta!</div>
-        <p style="font-size:17px;font-weight:600;color:var(--ph-azul);margin-bottom:4px">¡Felicitaciones, ${nombre}!</p>
-        <p style="font-size:14px;color:var(--text);line-height:1.6;margin:8px 0 16px;padding:12px;background:var(--p50);border-radius:var(--rads)">
-          Te invitamos para que este <strong style="color:var(--ph-rojo)">21 de junio</strong> votes por<br>
-          <strong style="color:var(--ph-azul);font-size:16px">Iván Cepeda</strong>
-          <span style="color:var(--muted)"> &amp; </span>
-          <strong style="color:var(--ph-morado);font-size:16px">Aída Quilcué</strong>
-        </p>
-        <div class="meta-num" style="color:var(--ph-verde)">#${num}</div>
+      <div class="meta-card" style="padding:28px 20px;position:relative;overflow:hidden">
+        <!-- confetti decorativo -->
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;display:flex">
+          <div style="flex:1;background:var(--ph-azul)"></div>
+          <div style="flex:1;background:var(--ph-rojo)"></div>
+          <div style="flex:1;background:var(--ph-naranja)"></div>
+          <div style="flex:1;background:var(--ph-amarillo)"></div>
+          <div style="flex:1;background:var(--ph-verde)"></div>
+          <div style="flex:1;background:var(--ph-morado)"></div>
+        </div>
+        <span class="meta-trophy" style="font-size:52px">🎉</span>
+        <div class="meta-title" style="font-size:22px;margin-bottom:4px">¡Llegaste a la meta!</div>
+        <p style="font-size:20px;font-weight:700;color:var(--ph-azul);margin-bottom:16px">¡Felicitaciones, ${primerNombre}!</p>
+        <div style="background:var(--surf);border-radius:var(--rad);padding:14px 16px;margin-bottom:16px;border:.5px solid var(--bord)">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:6px">Te invitamos para que este</p>
+          <p style="font-size:17px;font-weight:700;color:var(--ph-rojo);margin-bottom:6px">📅 21 de junio</p>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:8px">votes por</p>
+          <p style="font-size:17px;font-weight:700;line-height:1.6">
+            <span style="color:var(--ph-azul)">Iván Cepeda</span>
+            <span style="color:var(--muted);font-weight:400"> &amp; </span>
+            <span style="color:var(--ph-morado)">Aída Quilcué</span>
+          </p>
+        </div>
+        <div style="font-size:36px;font-weight:700;color:var(--ph-verde);line-height:1">#${num}</div>
         <p style="font-size:11px;color:var(--muted);margin:4px 0 20px">participante registrado</p>
-        <button class="btn-primary" style="max-width:260px;margin:0 auto;display:block" onclick="nuevoParticipante()">Siguiente participante →</button>
+        <div style="display:flex;gap:10px;max-width:320px;margin:0 auto;flex-direction:column">
+          <button class="btn-primary" onclick="showTab('dashboard')" style="background:var(--ph-verde)">
+            📊 Ver resultados colectivos
+          </button>
+          <button onclick="nuevoParticipante()" style="padding:11px;background:none;border:.5px solid var(--bord);border-radius:var(--rads);font-size:14px;cursor:pointer;font-family:var(--font);color:var(--text)">
+            Siguiente participante →
+          </button>
+        </div>
       </div>`;
   } else if(done2<9){
     document.getElementById('meta-container').innerHTML='';
