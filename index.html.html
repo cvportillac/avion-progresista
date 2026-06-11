@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Avión Progresista — Programa 2026-2030</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Pacto Histórico palette */
+  --ph-naranja:#F47920;--ph-azul:#003DA5;--ph-rojo:#E31837;
+  --ph-verde:#00923F;--ph-morado:#6A2D8F;--ph-amarillo:#F5C400;
+  /* Primary = azul PH */
+  --p50:#E6EEF8;--p200:#809FD0;--p400:#2D65B5;--p600:#003DA5;--p800:#002E7C;--p900:#001E52;
+  /* Accent teal → verde PH */
+  --t50:#E0F3EA;--t400:#00923F;--t600:#006B2D;
+  /* Amber → naranja PH */
+  --a50:#FEF0E5;--a200:#FAC08A;--a400:#F47920;
+  /* Red PH */
+  --r50:#FCE8EB;--r400:#E31837;--r600:#AB1129;
+  /* Neutrals */
+  --g50:#F4F4F2;--g100:#DDDBD6;--g400:#888780;--g600:#5F5E5A;
+  --text:#1a1a1a;--muted:#5F5E5A;--hint:#888780;
+  --bg:#F4F6FB;--surf:#fff;--bord:rgba(0,0,0,0.11);
+  --rad:12px;--rads:8px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
+}
+@media(prefers-color-scheme:dark){:root{
+  --text:#f0efeb;--muted:#B4B2A9;--hint:#888780;
+  --bg:#1e1d1a;--surf:#2a2926;--bord:rgba(255,255,255,0.1);
+  --p50:#26215C;--p200:#3C3489;--t50:#04342C;--a50:#412402;--r50:#501313
+}}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+.app{max-width:680px;margin:0 auto;padding-bottom:80px}
+
+.topbar{background:var(--surf);border-bottom:.5px solid var(--bord);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:8px}
+.topbar-left{min-width:0;flex:1}
+.topbar-title{font-size:clamp(15px,4vw,22px);font-weight:700;line-height:1.15;background:linear-gradient(90deg,var(--ph-azul),var(--ph-morado),var(--ph-rojo),var(--ph-naranja),var(--ph-verde));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-sub{font-size:clamp(10px,2.5vw,12px);color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-dot{width:8px;height:8px;background:var(--t400);border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.tabs{display:flex;background:var(--surf);border-bottom:.5px solid var(--bord)}
+.tab{flex:1;padding:13px 6px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;font-family:var(--font)}
+.tab.active{color:var(--ph-azul);border-bottom-color:var(--ph-azul)}
+
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+
+.card{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);padding:16px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:500;margin-bottom:14px}
+
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;font-weight:500;letter-spacing:.4px;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:15px;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ph-azul);box-shadow:0 0 0 3px #E6EEF8}
+.field-note{font-size:11px;color:var(--hint);margin-top:4px}
+.optional-tag{font-size:10px;color:var(--hint);font-weight:400;margin-left:4px;text-transform:none;letter-spacing:0}
+
+.btn-primary{width:100%;padding:13px;background:var(--ph-azul);color:#fff;border:none;border-radius:var(--rads);font-size:15px;font-weight:500;cursor:pointer;font-family:var(--font)}
+.btn-primary:active{background:var(--ph-morado);transform:scale(.99)}
+.btn-ghost{padding:9px 14px;background:none;border:.5px solid var(--bord);border-radius:var(--rads);font-size:13px;cursor:pointer;font-family:var(--font);color:var(--text)}
+
+/* ESPERA */
+.wait-card{background:var(--a50);border:.5px solid var(--a200);border-radius:var(--rad);padding:24px;text-align:center;margin-top:8px}
+.wait-spinner{width:28px;height:28px;border:3px solid #FAC08A;border-top-color:var(--ph-naranja);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wait-title{font-size:17px;font-weight:500;color:var(--ph-naranja);margin-bottom:6px}
+.wait-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.wait-email{font-size:13px;color:var(--ph-naranja);font-weight:500;background:var(--surf);padding:6px 12px;border-radius:var(--rads);display:inline-block;margin-bottom:12px}
+
+/* AVIÓN */
+.player-bar{background:#E6EEF8;border:.5px solid #809FD0;border-radius:var(--rad);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.player-name{font-size:14px;font-weight:500;color:var(--ph-azul)}
+.player-prog{font-size:12px;color:var(--ph-morado);margin-top:2px}
+.pbar{height:4px;background:#809FD0;border-radius:2px;margin-top:8px;overflow:hidden}
+.pbar-fill{height:4px;background:var(--ph-azul);border-radius:2px;transition:width .4s}
+
+.avion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.cell{border:.5px solid var(--bord);border-radius:var(--rad);padding:10px;background:var(--surf);cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.cell.current{border:2px solid var(--ph-azul);background:#E6EEF8}
+.cell.done{background:var(--t50);border-color:var(--t400)}
+.cell.locked{opacity:.35;pointer-events:none}
+.cell-num{font-size:10px;font-weight:500;color:var(--hint);margin-bottom:3px}
+.cell-icon{font-size:20px;display:block;margin-bottom:4px;line-height:1}
+.cell-title{font-size:11px;font-weight:500;color:var(--text);line-height:1.3}
+.cell-badge{position:absolute;top:7px;right:7px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px}
+.cell-badge.done{background:var(--t400);color:#fff}
+.cell-badge.cur{background:var(--ph-azul);color:#fff}
+
+/* MODAL PROPUESTA */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:0}
+@media(min-width:480px){.modal-bg{align-items:center;padding:16px}}
+.modal{background:var(--surf);border-radius:var(--rad) var(--rad) 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+@media(min-width:480px){.modal{border-radius:var(--rad);padding-bottom:20px}}
+.modal-handle{width:36px;height:4px;background:var(--bord);border-radius:2px;margin:0 auto 16px}
+@media(min-width:480px){.modal-handle{display:none}}
+.modal-eje{font-size:16px;font-weight:500;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+
+.opt{padding:11px 12px;border:.5px solid var(--bord);border-radius:var(--rads);margin-bottom:7px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.opt.selected{border-color:var(--ph-azul);background:#E6EEF8}
+.opt.none-opt{border-style:dashed}
+.opt.none-opt.selected{border-color:var(--g400);background:var(--g50)}
+.opt.otra-opt{border-style:dashed;border-color:var(--t400)}
+.opt.otra-opt.selected{background:var(--t50);border-color:var(--t400)}
+.opt-num{min-width:22px;height:22px;border-radius:50%;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--muted);flex-shrink:0;margin-top:1px}
+.opt.selected .opt-num{background:var(--ph-azul);color:#fff}
+.opt.none-opt.selected .opt-num{background:var(--g400);color:#fff}
+.opt.otra-opt.selected .opt-num{background:var(--t400);color:#fff}
+.opt-text{font-size:13px;color:var(--text);line-height:1.45}
+.otra-input-wrap{margin-top:8px;display:none}
+.otra-input-wrap.visible{display:block}
+.otra-input{width:100%;padding:9px 11px;border:.5px solid var(--t400);border-radius:var(--rads);font-size:13px;background:var(--bg);color:var(--text);font-family:var(--font)}
+.otra-input:focus{outline:none;box-shadow:0 0 0 3px var(--t50)}
+
+.modal-btns{display:flex;gap:8px;margin-top:14px}
+.btn-cancel{flex:0 0 80px;padding:12px;background:none;border:.5px solid var(--bord);border-radius:var(--rads);font-size:14px;cursor:pointer;font-family:var(--font);color:var(--text)}
+.btn-confirm{flex:1;padding:12px;background:var(--ph-azul);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font)}
+
+/* META */
+.meta-card{background:#E0F3EA;border:.5px solid var(--ph-verde);border-radius:var(--rad);padding:24px;text-align:center;margin-top:8px}
+.meta-trophy{font-size:48px;display:block;margin-bottom:12px}
+.meta-title{font-size:20px;font-weight:500;color:var(--ph-verde);margin-bottom:6px}
+.meta-num{font-size:32px;font-weight:500;color:var(--ph-verde)}
+
+/* DASHBOARD */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--surf);border-radius:var(--rads);padding:11px;text-align:center;border:.5px solid var(--bord)}
+.stat-val{font-size:22px;font-weight:500;color:var(--text);line-height:1}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:3px}
+
+.queue-section{margin-bottom:16px}
+.queue-title{font-size:13px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.badge-count{font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;border:.5px solid var(--a200);background:var(--a50);color:var(--a400)}
+.badge-count.empty{background:var(--g50);color:var(--hint);border-color:var(--g100)}
+.queue-item{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rads);padding:12px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
+.queue-avatar{width:36px;height:36px;border-radius:50%;background:#E6EEF8;color:var(--ph-azul);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.queue-info{flex:1;min-width:0}
+.queue-name{font-size:13px;font-weight:500}
+.queue-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.queue-email{font-size:11px;color:var(--ph-azul);margin-top:1px}
+.queue-actions{display:flex;gap:6px;flex-shrink:0}
+.btn-approve{padding:7px 12px;background:var(--ph-verde);color:#fff;border:none;border-radius:var(--rads);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font)}
+.btn-reject{padding:7px 10px;background:none;border:.5px solid var(--bord);border-radius:var(--rads);font-size:12px;cursor:pointer;font-family:var(--font);color:var(--muted)}
+
+/* EJES resultado */
+.eje-card{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);overflow:hidden;margin-bottom:8px}
+.eje-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.eje-head-icon{font-size:20px;flex-shrink:0}
+.eje-head-info{flex:1;min-width:0}
+.eje-head-title{font-size:13px;font-weight:500}
+.eje-head-votes{font-size:11px;color:var(--muted);margin-top:1px}
+.eje-chev{color:var(--hint);font-size:14px;transition:transform .2s;flex-shrink:0}
+.eje-chev.open{transform:rotate(180deg)}
+.eje-body{padding:0 14px 14px;border-top:.5px solid var(--bord);display:none}
+.eje-body.open{display:block}
+.bar-item{margin-top:12px}
+.bar-labels{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
+.bar-label{font-size:12px;line-height:1.35;flex:1}
+.bar-right{text-align:right;flex-shrink:0}
+.bar-pct{font-size:12px;font-weight:500;color:var(--p600)}
+.bar-cnt{font-size:11px;color:var(--muted)}
+.bar-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bar-fill{height:6px;background:var(--ph-azul);opacity:.7;border-radius:3px;transition:width .5s}
+.bar-fill.top{background:var(--ph-azul)}
+.bar-fill.none-fill{background:var(--g400)}
+.bar-fill.otra-fill{background:var(--t400)}
+
+/* PROPUESTAS SUGERIDAS */
+.sugeridas-section{margin-top:20px}
+.sugeridas-title{font-size:13px;font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sug-eje{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);overflow:hidden;margin-bottom:8px}
+.sug-head{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sug-head-icon{font-size:18px;flex-shrink:0}
+.sug-head-title{font-size:13px;font-weight:500;flex:1}
+.sug-count{font-size:11px;color:var(--t600);background:var(--t50);padding:2px 8px;border-radius:10px;border:.5px solid var(--t400)}
+.sug-body{padding:0 14px 12px;border-top:.5px solid var(--bord);display:none}
+.sug-body.open{display:block}
+.sug-item{padding:9px 0;border-bottom:.5px solid var(--bord);display:flex;align-items:flex-start;gap:8px}
+.sug-item:last-child{border-bottom:none}
+.sug-texto{font-size:13px;color:var(--text);flex:1;line-height:1.4}
+.sug-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.sug-autor{font-size:11px;color:var(--p600)}
+
+/* ALMACENAMIENTO INFO */
+.storage-info{background:var(--p50);border:.5px solid var(--p200);border-radius:var(--rads);padding:12px 14px;margin-bottom:14px}
+.storage-title{font-size:12px;font-weight:500;color:var(--p600);margin-bottom:6px}
+.storage-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px}
+.storage-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.storage-dot.local{background:var(--a400)}
+.storage-dot.cloud{background:var(--t400)}
+.storage-text{font-size:12px;color:var(--text);line-height:1.45}
+
+/* CONFIG */
+.setup-box{background:var(--a50);border:.5px solid var(--a200);border-radius:var(--rads);padding:14px;margin-bottom:12px}
+.setup-title{font-size:13px;font-weight:500;color:var(--a400);margin-bottom:8px}
+.setup-step{font-size:12px;color:var(--text);margin-bottom:5px;line-height:1.5}
+.setup-step code{background:var(--surf);padding:1px 5px;border-radius:3px;font-size:11px;color:var(--p600)}
+.config-ta{width:100%;padding:10px 12px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:12px;background:var(--surf);color:var(--text);font-family:monospace;margin-bottom:8px;resize:vertical}
+.config-ta:focus{outline:none;border-color:var(--p400)}
+.conn-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:8px}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--g400);flex-shrink:0}
+.conn-dot.ok{background:var(--t400)}
+.conn-dot.err{background:var(--r400)}
+
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
+.section-divider{font-size:11px;font-weight:500;color:var(--muted);margin:16px 0 8px;letter-spacing:.4px;text-transform:uppercase}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:420px){.demo-grid{grid-template-columns:1fr}}
+.donut-wrap{display:flex;align-items:center;gap:12px}
+.donut-svg{flex-shrink:0}
+.donut-legend{flex:1;min-width:0}
+.donut-leg-item{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px}
+.donut-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.donut-leg-label{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.donut-leg-val{font-size:11px;color:var(--muted);font-weight:500}
+.hbar-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.hbar-label{font-size:12px;color:var(--text);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.hbar-fill{height:8px;border-radius:4px;transition:width .5s}
+.hbar-val{font-size:11px;color:var(--muted);width:28px;text-align:right;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">✈️ Avión Progresista</div>
+      <div class="topbar-sub">Iván Cepeda &amp; Aída Quilcué 2026-2030</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="live-dot" id="live-dot" style="display:none"></span>
+      <span id="conn-label" style="font-size:11px;color:var(--muted)"></span>
+      <button class="btn-ghost" style="padding:7px 10px;font-size:13px" onclick="showTab('config')" title="Configurar">⚙️</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-juego" onclick="showTab('juego')">🎮 Jugar</button>
+    <button class="tab" id="tab-btn-dashboard" onclick="showTab('dashboard')">📊 Resultados</button>
+  </div>
+
+  <!-- ══ JUEGO ══ -->
+  <div id="screen-juego" class="screen active">
+
+    <div id="view-registro">
+      <div class="card" style="margin-top:8px">
+        <div class="card-title">👤 Registro del participante</div>
+        <div class="field">
+          <label>NOMBRE</label>
+          <input type="text" id="reg-nombre" placeholder="Ej: María" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label>CORREO ELECTRÓNICO <span class="optional-tag">(opcional)</span></label>
+          <input type="email" id="reg-email" placeholder="tucorreo@email.com" autocomplete="email">
+          <div class="field-note">Solo si quieres hacer parte del equipo progresista.</div>
+        </div>
+        <div class="field">
+          <label>MUNICIPIO O CIUDAD</label>
+          <input type="text" id="reg-municipio" placeholder="Ej: La Florida" autocomplete="off"
+            oninput="this.value=toTitleCase(this.value)">
+        </div>
+        <div class="field">
+          <label>RANGO DE EDAD</label>
+          <select id="reg-edad">
+            <option value="">Selecciona tu rango...</option>
+            <option>Menor de 14 años</option>
+            <option>14-17 años</option><option>18-25 años</option><option>26-35 años</option>
+            <option>36-50 años</option><option>51-65 años</option><option>Más de 65 años</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>GÉNERO</label>
+          <select id="reg-genero">
+            <option value="">Selecciona...</option>
+            <option>Hombre</option>
+            <option>Mujer</option>
+            <option>Otro</option>
+            <option>Prefiero no decirlo</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="enviarRegistro()">Registrarme y esperar aprobación →</button>
+      </div>
+      <p style="font-size:11px;color:var(--hint);text-align:center;margin-top:6px;padding:0 8px">Al participar aceptas que tus preferencias se registren de forma anónima con fines estadísticos.</p>
+    </div>
+
+    <div id="view-espera" style="display:none">
+      <div class="wait-card">
+        <div class="wait-spinner"></div>
+        <div class="wait-title">Registro enviado ⏳</div>
+        <div class="wait-email" id="espera-nombre"></div>
+        <div class="wait-sub">El organizador del evento debe aprobar tu participación.<br>Esta pantalla se actualizará automáticamente cuando seas aprobado/a.</div>
+        <button class="btn-ghost" onclick="cancelarEspera()" style="font-size:12px">Cancelar y volver</button>
+      </div>
+    </div>
+
+    <div id="view-juego" style="display:none">
+      <div class="player-bar">
+        <div style="flex:1">
+          <div class="player-name" id="gamer-name"></div>
+          <div class="player-prog" id="gamer-prog"></div>
+          <div class="pbar"><div class="pbar-fill" id="pbar-fill" style="width:0%"></div></div>
+        </div>
+        <button class="btn-ghost" onclick="nuevoParticipante()" style="margin-left:12px;font-size:12px">↩ Nuevo</button>
+      </div>
+      <div class="avion-grid" id="avion-grid"></div>
+      <div id="meta-container"></div>
+    </div>
+
+  </div>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div id="screen-dashboard" class="screen">
+
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-val" id="d-total">0</div><div class="stat-lbl">Registrados</div></div>
+      <div class="stat"><div class="stat-val" id="d-pendientes" style="color:var(--ph-naranja)">0</div><div class="stat-lbl">Pendientes</div></div>
+      <div class="stat"><div class="stat-val" id="d-completos" style="color:var(--ph-verde)">0</div><div class="stat-lbl">Completaron</div></div>
+      <div class="stat"><div class="stat-val" id="d-votos">0</div><div class="stat-lbl">Votos</div></div>
+    </div>
+
+    <!-- Cola compacta: solo visible si hay pendientes -->
+    <div id="queue-compact" style="display:none;margin-bottom:10px">
+      <div style="background:var(--a50);border:.5px solid var(--a200);border-radius:var(--rads);padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="toggleQueue()">
+        <span style="font-size:13px;font-weight:500;color:var(--a400)">⏳ Esperando aprobación</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="badge-count" id="badge-pendientes">0</span>
+          <span id="queue-chev" style="font-size:13px;color:var(--a400);transition:transform .2s">▾</span>
+        </span>
+      </div>
+      <div id="queue-list" style="display:none;margin-top:6px"></div>
+    </div>
+
+    <div id="demo-section" style="display:none">
+      <div class="section-divider">Perfil de participantes</div>
+      <div class="demo-grid">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title" style="font-size:13px;margin-bottom:10px">Género</div>
+          <div id="chart-genero"></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title" style="font-size:13px;margin-bottom:10px">Rango de edad</div>
+          <div id="chart-edad"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-title" style="font-size:13px;margin-bottom:10px">Municipios y ciudades</div>
+        <div id="chart-municipio"></div>
+      </div>
+    </div>
+
+    <div class="section-divider" style="margin-top:16px">Resultados por eje temático</div>
+    <div id="dash-content"></div>
+    <div id="dash-empty" class="empty" style="display:none">
+      <div style="font-size:32px;margin-bottom:8px">🗳️</div>
+      Aún no hay votos registrados.<br>
+      <span style="font-size:12px">Los resultados aparecerán aquí en tiempo real.</span>
+    </div>
+
+    <div class="sugeridas-section" id="sugeridas-section" style="display:none">
+      <div class="section-divider">Propuestas sugeridas por participantes</div>
+      <div id="sugeridas-content"></div>
+    </div>
+
+  </div>
+
+  <!-- ══ CONFIG ══ -->
+  <div id="screen-config" class="screen">
+    <div class="card">
+      <div class="card-title">📦 ¿Dónde se guardan los resultados?</div>
+      <div class="storage-info">
+        <div class="storage-title">Estado actual del almacenamiento</div>
+        <div class="storage-row">
+          <div class="storage-dot local"></div>
+          <div class="storage-text"><strong>Sin Firebase:</strong> los datos se guardan en el navegador del dispositivo donde corre la app (localStorage). Si cierras el navegador o cambias de dispositivo, se pierden. Solo útil para pruebas.</div>
+        </div>
+        <div class="storage-row">
+          <div class="storage-dot cloud"></div>
+          <div class="storage-text"><strong>Con Firebase (recomendado):</strong> los datos se guardan en la nube de Google, gratis hasta 1 GB. Todos los celulares comparten los mismos datos en tiempo real y puedes exportarlos como JSON desde la consola de Firebase.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Configurar Firebase (tiempo real)</div>
+      <div class="setup-box">
+        <div class="setup-title">📋 Pasos para configurar (5 minutos, gratis)</div>
+        <div class="setup-step">1. Ve a <strong>console.firebase.google.com</strong> → Crear proyecto</div>
+        <div class="setup-step">2. <strong>Realtime Database</strong> → Crear base de datos → Modo prueba</div>
+        <div class="setup-step">3. Configuración del proyecto → Agrega app web → copia el objeto <code>firebaseConfig</code></div>
+        <div class="setup-step">4. En Reglas pega: <code>{"rules":{".read":true,".write":true}}</code></div>
+        <div class="setup-step">5. Pega aquí la configuración y guarda.</div>
+      </div>
+      <label style="font-size:11px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px">PEGA TU FIREBASE CONFIG (JSON)</label>
+      <textarea class="config-ta" id="fb-config-input" rows="8" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "mi-proyecto.firebaseapp.com",
+  "databaseURL": "https://mi-proyecto-default-rtdb.firebaseio.com",
+  "projectId": "mi-proyecto",
+  "storageBucket": "mi-proyecto.appspot.com",
+  "messagingSenderId": "123456",
+  "appId": "1:123456:web:abc123"
+}'></textarea>
+      <button class="btn-primary" onclick="guardarConfig()">Guardar y conectar</button>
+      <div class="conn-row"><div class="conn-dot" id="conn-dot"></div><span id="conn-text">Sin configurar — usando almacenamiento local</span></div>
+    </div>
+
+    <div class="card" style="background:var(--p50);border-color:var(--p200)">
+      <div style="font-size:13px;font-weight:500;color:var(--p900);margin-bottom:8px">💡 Despliegue gratuito con GitHub Pages</div>
+      <div style="font-size:12px;color:var(--p600);line-height:1.7">
+        1. Crea un repositorio en <strong>github.com</strong><br>
+        2. Sube este archivo como <code style="background:var(--surf);padding:1px 5px;border-radius:3px">index.html</code><br>
+        3. Settings → Pages → Branch main → Save<br>
+        4. Comparte la URL: <code style="background:var(--surf);padding:1px 5px;border-radius:3px">tuusuario.github.io/repositorio</code> 🎉
+      </div>
+    </div>
+    <button class="btn-ghost" style="width:100%;margin-top:4px" onclick="showTab('juego')">← Volver al juego</button>
+  </div>
+
+</div>
+
+<!-- MODAL PROPUESTA -->
+<div id="modal" class="modal-bg" style="display:none" onclick="bgClick(event)">
+  <div class="modal" id="modal-inner">
+    <div class="modal-handle"></div>
+    <div class="modal-eje" id="modal-title"></div>
+    <div class="modal-sub">¿Cuál propuesta te representa más?</div>
+    <div id="modal-opts"></div>
+    <div class="otra-input-wrap" id="otra-wrap">
+      <input type="text" class="otra-input" id="otra-input" placeholder="Escribe tu propuesta aquí..."
+        oninput="this.value=toSentenceCase(this.value)" autocomplete="off">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarVoto()">Confirmar ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EJES=[
+  {id:1,icon:"🔍",title:"Lucha contra la corrupción",
+   props:["Sistema Nacional contra la Corrupción con capacidad sancionatoria real","Proteger a denunciantes y testigos","Más transparencia en la contratación pública"]},
+  {id:2,icon:"🌱",title:"Revolución agraria y ambiental",
+   props:["Acceso a tierra para campesinos y comunidades","Apoyo al campo, producción de alimentos y economía campesina","Cuidado del agua, protección de ecosistemas y transición energética"]},
+  {id:3,icon:"👥",title:"Más derechos y menos pobreza",
+   props:["Ampliar salud, educación, pensiones y programas sociales","Enfoque en primera infancia, jóvenes, mujeres, mayores y población vulnerable","Combatir el hambre y la desigualdad"]},
+  {id:4,icon:"🕊️",title:"Paz total y diálogo",
+   props:["Continuar y fortalecer los diálogos de paz","Negociación con grupos armados que quieran dejar la violencia","Atención a víctimas: verdad, justicia, reparación y no repetición"]},
+  {id:5,icon:"🛡️",title:"Seguridad humana",
+   props:["Prevención, inteligencia y desmantelar economías criminales","Más inversión social en territorios","Respeto a los derechos humanos"]},
+  {id:6,icon:"🗳️",title:"Democracia y participación",
+   props:["Fortalecer la participación ciudadana y el control social","Garantizar elecciones limpias y proteger derechos políticos","Gobierno abierto y cercano a la gente"]},
+  {id:7,icon:"📈",title:"Economía para la vida",
+   props:["Impulsar producción nacional, empleo digno y formal","Apoyar a pequeñas y medianas empresas","Una economía al servicio de las mayorías"]},
+  {id:8,icon:"⚧️",title:"Igualdad de verdad",
+   props:["Igualdad sustantiva para mujeres y diversidades","Cerrar brechas de género, étnicas, territoriales y sociales","Una sociedad libre de discriminación y violencias"]},
+  {id:9,icon:"🌐",title:"Soberanía y política exterior",
+   props:["Defensa de la soberanía nacional","Política exterior autónoma, de paz y solidaridad","Protección y apoyo a migrantes colombianos"]}
+];
+
+// Opciones especiales: índice 3 = Ninguna, índice 4 = Otra (texto libre)
+const IDX_NINGUNA = 3;
+const IDX_OTRA    = 4;
+
+let db=null, dbRef=null;
+let participantes={};
+let current=null;
+let selectedProp=null, currentEje=null;
+let esperaId=null, esperaListener=null;
+
+// ── UTILIDADES ────────────────────────────────────────
+function toTitleCase(str){
+  return str.replace(/\w\S*/g, w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
+}
+
+function toSentenceCase(str){
+  if(!str) return str;
+  const s=str.trim().toLowerCase();
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+// ── FIREBASE ──────────────────────────────────────────
+function loadConfig(){try{return JSON.parse(localStorage.getItem('fb_config')||'null')}catch(e){return null}}
+
+function initFirebase(cfg){
+  try{
+    if(firebase.apps.length) firebase.apps.forEach(a=>a.delete());
+    firebase.initializeApp(cfg);
+    db=firebase.database();
+    dbRef=db.ref('avion_progresista');
+    dbRef.on('value',snap=>{
+      participantes=snap.val()||{};
+      if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+      setConn(true);
+    },err=>setConn(false,err.message));
+    return true;
+  }catch(e){setConn(false,e.message);return false}
+}
+
+function setConn(ok,msg){
+  document.getElementById('conn-dot').className='conn-dot'+(ok?' ok':' err');
+  document.getElementById('conn-text').textContent=ok?'Conectado a Firebase ✓ — datos guardados en la nube':'Error: '+(msg||'sin conexión');
+  document.getElementById('live-dot').style.display=ok?'inline-block':'none';
+  document.getElementById('conn-label').textContent=ok?'En vivo':'';
+}
+
+function guardarConfig(){
+  const raw=document.getElementById('fb-config-input').value.trim();
+  try{
+    const cfg=JSON.parse(raw);
+    if(!cfg.databaseURL){alert('Falta databaseURL. Asegúrate de usar Realtime Database.');return}
+    localStorage.setItem('fb_config',raw);
+    if(initFirebase(cfg)){alert('✅ Conectado a Firebase. Los datos se guardan en la nube.');showTab('juego')}
+    else alert('Error al conectar. Revisa la configuración.')
+  }catch(e){alert('JSON inválido. Copia el bloque completo del config de Firebase.')}
+}
+
+async function dbSet(path,val){
+  if(db){
+    await dbRef.child(path).set(val);
+  } else {
+    const parts=path.split('/');
+    let obj=participantes;
+    for(let i=0;i<parts.length-1;i++){if(!obj[parts[i]])obj[parts[i]]={};obj=obj[parts[i]];}
+    obj[parts[parts.length-1]]=val;
+    try{localStorage.setItem('avion_local',JSON.stringify(participantes))}catch(e){}
+  }
+}
+
+// ── TABS ──────────────────────────────────────────────
+function showTab(t){
+  ['juego','dashboard','config'].forEach(id=>{
+    const s=document.getElementById('screen-'+id);
+    const b=document.getElementById('tab-btn-'+id);
+    if(s){s.classList.remove('active');s.style.display='none'}
+    if(b) b.classList.remove('active');
+  });
+  const sc=document.getElementById('screen-'+t);
+  if(sc){sc.classList.add('active');sc.style.display='block'}
+  const bt=document.getElementById('tab-btn-'+t);
+  if(bt) bt.classList.add('active');
+  if(t==='dashboard') renderDashboard();
+}
+
+// ── REGISTRO ──────────────────────────────────────────
+async function enviarRegistro(){
+  const nom=document.getElementById('reg-nombre').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const mun=document.getElementById('reg-municipio').value.trim();
+  const edad=document.getElementById('reg-edad').value;
+  const genero=document.getElementById('reg-genero').value;
+  if(!nom||!mun||!edad||!genero){alert('Por favor completa los campos obligatorios.');return}
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('El correo ingresado no es válido.');return}
+
+  const id=Date.now();
+  const p={id,nombre:nom,email:email||'',municipio:toTitleCase(mun),edad,genero,
+           estado:'pendiente',votos:{},otrasProps:{},completado:false,ts:new Date().toISOString()};
+  await dbSet(id.toString(),p);
+  participantes[id]=p;
+
+  esperaId=id;
+  document.getElementById('espera-nombre').textContent='👤 '+nom+' — '+toTitleCase(mun);
+  document.getElementById('view-registro').style.display='none';
+  document.getElementById('view-espera').style.display='block';
+
+  if(db){
+    if(esperaListener) dbRef.child(id+'/estado').off('value',esperaListener);
+    esperaListener=dbRef.child(id+'/estado').on('value',snap=>{
+      if(snap.val()==='aprobado') onAprobado(id);
+    });
+  } else {
+    const poll=setInterval(()=>{
+      const est=(participantes[id]||{}).estado;
+      if(est==='aprobado'){clearInterval(poll);onAprobado(id);}
+    },1500);
+  }
+}
+
+function onAprobado(id){
+  if(esperaListener&&db) dbRef.child(id+'/estado').off('value',esperaListener);
+  esperaListener=null;
+  current=participantes[id]||{id,votos:{},otrasProps:{},completado:false,nombre:''};
+  if(!current.votos) current.votos={};
+  if(!current.otrasProps) current.otrasProps={};
+  document.getElementById('view-espera').style.display='none';
+  document.getElementById('view-juego').style.display='block';
+  document.getElementById('gamer-name').textContent='👤 '+current.nombre;
+  renderGrid();updateProgress();
+  setTimeout(()=>openModal(1),400);
+}
+
+function cancelarEspera(){
+  if(esperaId){
+    dbSet(esperaId+'/estado','cancelado');
+    if(esperaListener&&db) dbRef.child(esperaId+'/estado').off('value',esperaListener);
+  }
+  esperaId=null;esperaListener=null;
+  document.getElementById('view-espera').style.display='none';
+  document.getElementById('view-registro').style.display='block';
+}
+
+// ── APROBACIÓN ────────────────────────────────────────
+async function aprobar(id){
+  await dbSet(id+'/estado','aprobado');
+  if(!db){participantes[id].estado='aprobado';try{localStorage.setItem('avion_local',JSON.stringify(participantes))}catch(e){}}
+  renderDashboard();
+}
+
+async function rechazar(id){
+  await dbSet(id+'/estado','rechazado');
+  if(!db){participantes[id].estado='rechazado';try{localStorage.setItem('avion_local',JSON.stringify(participantes))}catch(e){}}
+  renderDashboard();
+}
+
+// ── JUEGO ─────────────────────────────────────────────
+function renderGrid(){
+  const done=Object.keys(current.votos).length;
+  document.getElementById('avion-grid').innerHTML=EJES.map(e=>{
+    const isDone=current.votos[e.id]!==undefined;
+    const isCur=!isDone&&done===e.id-1;
+    const cls='cell'+(isDone?' done':isCur?' current':' locked');
+    const badge=isDone?'<div class="cell-badge done">✓</div>':isCur?'<div class="cell-badge cur">→</div>':'';
+    const act=isCur?`onclick="openModal(${e.id})"`:'';
+    return`<div class="${cls}" ${act}>${badge}<span class="cell-icon">${e.icon}</span><div class="cell-num">Eje ${e.id}</div><div class="cell-title">${e.title}</div></div>`;
+  }).join('');
+
+  const done2=Object.keys(current.votos).length;
+  if(done2===9&&!current.completado){
+    current.completado=true;
+    dbSet(current.id+'/completado',true);
+    const num=Object.values(participantes).filter(p=>p.completado).length;
+    document.getElementById('meta-container').innerHTML=`
+      <div class="meta-card">
+        <span class="meta-trophy">🏆</span>
+        <div class="meta-title">¡Llegaste a la meta!</div>
+        <p style="font-size:13px;color:var(--muted);margin:6px 0 12px">Gracias ${current.nombre}, tus preferencias quedan registradas.</p>
+        <div class="meta-num">#${num}</div>
+        <p style="font-size:11px;color:var(--muted);margin:4px 0 16px">participante completado</p>
+        <button class="btn-primary" style="max-width:240px;margin:0 auto;display:block" onclick="nuevoParticipante()">Siguiente participante →</button>
+      </div>`;
+  } else if(done2<9){
+    document.getElementById('meta-container').innerHTML='';
+  }
+}
+
+function updateProgress(){
+  const done=Object.keys(current.votos).length;
+  document.getElementById('gamer-prog').textContent=`Eje ${Math.min(done+1,9)} de 9 — ${Math.round(done/9*100)}% completado`;
+  document.getElementById('pbar-fill').style.width=Math.round(done/9*100)+'%';
+}
+
+function openModal(ejeId){
+  const eje=EJES.find(e=>e.id===ejeId);
+  currentEje=ejeId; selectedProp=null;
+  document.getElementById('modal-title').textContent=eje.icon+' '+eje.title;
+  document.getElementById('otra-input').value='';
+  document.getElementById('otra-wrap').classList.remove('visible');
+
+  const opts=eje.props.map((p,i)=>
+    `<div class="opt" onclick="selectProp(${i})" id="opt-${i}">
+      <div class="opt-num">${i+1}</div>
+      <div class="opt-text">${p}</div>
+    </div>`
+  ).join('');
+
+  // Opción Ninguna
+  const ningunaOpt=`<div class="opt none-opt" onclick="selectProp(${IDX_NINGUNA})" id="opt-${IDX_NINGUNA}">
+    <div class="opt-num">—</div>
+    <div class="opt-text" style="color:var(--muted)">Ninguna de las anteriores</div>
+  </div>`;
+
+  // Opción Otra
+  const otraOpt=`<div class="opt otra-opt" onclick="selectProp(${IDX_OTRA})" id="opt-${IDX_OTRA}">
+    <div class="opt-num">+</div>
+    <div class="opt-text" style="color:var(--t600)">Otra — escribe tu propuesta</div>
+  </div>`;
+
+  document.getElementById('modal-opts').innerHTML=opts+ningunaOpt+otraOpt;
+  document.getElementById('modal').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+
+function selectProp(i){
+  selectedProp=i;
+  document.querySelectorAll('.opt').forEach((el,idx)=>el.classList.toggle('selected',idx===i));
+  // Mostrar input si eligió "Otra"
+  const wrap=document.getElementById('otra-wrap');
+  if(i===IDX_OTRA){
+    wrap.classList.add('visible');
+    document.getElementById('otra-input').focus();
+  } else {
+    wrap.classList.remove('visible');
+  }
+}
+
+function bgClick(e){if(e.target===document.getElementById('modal'))cerrarModal()}
+function cerrarModal(){document.getElementById('modal').style.display='none';document.body.style.overflow=''}
+
+async function confirmarVoto(){
+  if(selectedProp===null){alert('Selecciona una opción.');return}
+
+  if(selectedProp===IDX_OTRA){
+    const texto=document.getElementById('otra-input').value.trim();
+    if(!texto){alert('Por favor escribe tu propuesta en el campo de texto.');return}
+    // Guardar voto como "otra"
+    current.votos[currentEje]='otra';
+    // Guardar texto de la propuesta
+    if(!current.otrasProps) current.otrasProps={};
+    current.otrasProps[currentEje]=texto;
+    await dbSet(current.id+'/votos/'+currentEje,'otra');
+    await dbSet(current.id+'/otrasProps/'+currentEje,texto);
+  } else {
+    current.votos[currentEje]=selectedProp;
+    await dbSet(current.id+'/votos/'+currentEje,selectedProp);
+  }
+
+  cerrarModal();
+  renderGrid();
+  updateProgress();
+  const done=Object.keys(current.votos).length;
+  if(done<9) setTimeout(()=>openModal(done+1),350);
+}
+
+function nuevoParticipante(){
+  current=null; esperaId=null;
+  document.getElementById('view-juego').style.display='none';
+  document.getElementById('view-registro').style.display='block';
+  ['reg-nombre','reg-email','reg-municipio'].forEach(id=>document.getElementById(id).value='');
+  ['reg-edad','reg-genero'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ── COLORES GRÁFICAS ──────────────────────────────────
+const PALETTE=['#003DA5','#00923F','#F47920','#E31837','#6A2D8F','#F5C400','#888780','#2D65B5'];
+
+// ── DONUT SVG ─────────────────────────────────────────
+function renderDonut(containerId, data){
+  // data = [{label, value, color}]
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  const total=data.reduce((s,d)=>s+d.value,0);
+  if(total===0){el.innerHTML='<div style="font-size:12px;color:var(--hint);padding:8px 0">Sin datos aún</div>';return;}
+
+  const R=44, r=26, cx=52, cy=52;
+  let startAngle=-Math.PI/2;
+  let paths='';
+  data.forEach(d=>{
+    if(d.value===0) return;
+    const angle=(d.value/total)*2*Math.PI;
+    const endAngle=startAngle+angle;
+    const x1=cx+R*Math.cos(startAngle), y1=cy+R*Math.sin(startAngle);
+    const x2=cx+R*Math.cos(endAngle),   y2=cy+R*Math.sin(endAngle);
+    const xi1=cx+r*Math.cos(startAngle),yi1=cy+r*Math.sin(startAngle);
+    const xi2=cx+r*Math.cos(endAngle),  yi2=cy+r*Math.sin(endAngle);
+    const large=angle>Math.PI?1:0;
+    // Only one segment — full circle
+    if(data.filter(x=>x.value>0).length===1){
+      paths+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${d.color}"/>
+              <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--surf)"/>`;
+    } else {
+      paths+=`<path d="M${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)}
+              L${xi2.toFixed(2)},${yi2.toFixed(2)} A${r},${r} 0 ${large},0 ${xi1.toFixed(2)},${yi1.toFixed(2)} Z"
+              fill="${d.color}"/>`;
+    }
+    startAngle=endAngle;
+  });
+
+  const legend=data.filter(d=>d.value>0).map(d=>{
+    const pct=Math.round(d.value/total*100);
+    return`<div class="donut-leg-item">
+      <div class="donut-leg-dot" style="background:${d.color}"></div>
+      <div class="donut-leg-label">${d.label}</div>
+      <div class="donut-leg-val">${pct}% (${d.value})</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="donut-wrap">
+    <svg class="donut-svg" width="104" height="104" viewBox="0 0 104 104">
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--bg)"/>
+      ${paths}
+      <text x="${cx}" y="${cy+1}" text-anchor="middle" dominant-baseline="middle"
+        style="font-size:13px;font-weight:500;fill:var(--text)">${total}</text>
+      <text x="${cx}" y="${cy+14}" text-anchor="middle" dominant-baseline="middle"
+        style="font-size:9px;fill:var(--muted)">total</text>
+    </svg>
+    <div class="donut-legend">${legend}</div>
+  </div>`;
+}
+
+// ── HORIZONTAL BAR ────────────────────────────────────
+function renderHBar(containerId, data, color){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  const max=Math.max(...data.map(d=>d.value),1);
+  if(data.every(d=>d.value===0)){el.innerHTML='<div style="font-size:12px;color:var(--hint);padding:8px 0">Sin datos aún</div>';return;}
+  const sorted=[...data].sort((a,b)=>b.value-a.value);
+  el.innerHTML=sorted.map((d,i)=>{
+    const pct=Math.round(d.value/max*100);
+    const c=color||PALETTE[i%PALETTE.length];
+    return`<div class="hbar-item">
+      <div class="hbar-label" title="${d.label}">${d.label}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${c}"></div></div>
+      <div class="hbar-val">${d.value}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+function renderDashboard(){
+  const list=Object.values(participantes);
+  const pendientes=list.filter(p=>p.estado==='pendiente');
+  const votan=list.filter(p=>p.estado==='aprobado'||p.completado);
+  const completos=list.filter(p=>p.completado);
+  let totalV=0; list.forEach(p=>{ if(p.votos) totalV+=Object.keys(p.votos).length; });
+
+  document.getElementById('d-total').textContent=list.length;
+  document.getElementById('d-pendientes').textContent=pendientes.length;
+  document.getElementById('d-completos').textContent=completos.length;
+  document.getElementById('d-votos').textContent=totalV;
+
+  const badge=document.getElementById('badge-pendientes');
+  badge.textContent=pendientes.length;
+  badge.className='badge-count'+(pendientes.length===0?' empty':'');
+
+  // Cola compacta: ocultar si no hay pendientes
+  const qCompact=document.getElementById('queue-compact');
+  qCompact.style.display=pendientes.length>0?'block':'none';
+
+  const qEl=document.getElementById('queue-list');
+  if(pendientes.length>0){
+    qEl.innerHTML=pendientes.map(p=>{
+      const ini=(p.nombre||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const emailStr=p.email?`<div class="queue-email">📧 ${p.email}</div>`:'';
+      return`<div class="queue-item">
+        <div class="queue-avatar">${ini}</div>
+        <div class="queue-info">
+          <div class="queue-name">${p.nombre}</div>
+          <div class="queue-meta">${p.municipio} · ${p.edad} · ${p.genero}</div>
+          ${emailStr}
+        </div>
+        <div class="queue-actions">
+          <button class="btn-approve" onclick="aprobar('${p.id}')">✓ Aprobar</button>
+          <button class="btn-reject" onclick="rechazar('${p.id}')">✗</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Gráficas demográficas ──
+  const aprobados=list.filter(p=>p.estado==='aprobado'||p.completado||p.estado==='rechazado');
+  const demoSec=document.getElementById('demo-section');
+  if(aprobados.length>0){
+    demoSec.style.display='block';
+
+    // Género
+    const GENEROS=['Hombre','Mujer','Otro','Prefiero no decirlo'];
+    const GCOLORS=['#003DA5','#E31837','#00923F','#888780'];
+    const gcounts={};
+    aprobados.forEach(p=>{if(p.genero) gcounts[p.genero]=(gcounts[p.genero]||0)+1;});
+    renderDonut('chart-genero', GENEROS.map((g,i)=>({label:g,value:gcounts[g]||0,color:GCOLORS[i]})));
+
+    // Edad
+    const EDADES=['Menor de 14 años','14-17 años','18-25 años','26-35 años','36-50 años','51-65 años','Más de 65 años'];
+    const ECOLORS=['#F5C400','#F47920','#E31837','#6A2D8F','#003DA5','#00923F','#888780'];
+    const ecounts={};
+    aprobados.forEach(p=>{if(p.edad) ecounts[p.edad]=(ecounts[p.edad]||0)+1;});
+    renderDonut('chart-edad', EDADES.map((e,i)=>({label:e,value:ecounts[e]||0,color:ECOLORS[i]})));
+
+    // Municipio
+    const mcounts={};
+    aprobados.forEach(p=>{if(p.municipio) mcounts[p.municipio]=(mcounts[p.municipio]||0)+1;});
+    const mdata=Object.entries(mcounts).map(([label,value])=>({label,value}));
+    renderHBar('chart-municipio', mdata, '#003DA5');
+  } else {
+    demoSec.style.display='none';
+  }
+
+  // ── Ejes ──
+  const cont=document.getElementById('dash-content');
+  const empt=document.getElementById('dash-empty');
+  if(votan.length===0){cont.innerHTML='';empt.style.display='block';}
+  else{
+    empt.style.display='none';
+    cont.innerHTML=EJES.map((eje,gi)=>{
+      const counts=[0,0,0,0,0]; let tot=0;
+      votan.forEach(p=>{
+        if(!p.votos) return;
+        const v=p.votos[eje.id];
+        if(v===undefined) return;
+        tot++;
+        if(v==='otra') counts[IDX_OTRA]++;
+        else if(typeof v==='number'&&v>=0&&v<5) counts[v]++;
+      });
+      const maxC=Math.max(...counts);
+
+      const propBars=eje.props.map((p,i)=>{
+        const pct=tot>0?Math.round(counts[i]/tot*100):0;
+        return`<div class="bar-item">
+          <div class="bar-labels">
+            <div class="bar-label">${i+1}. ${p}</div>
+            <div class="bar-right"><div class="bar-pct">${pct}%</div><div class="bar-cnt">${counts[i]}</div></div>
+          </div>
+          <div class="bar-track"><div class="bar-fill${counts[i]===maxC&&maxC>0?' top':''}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+
+      const ningPct=tot>0?Math.round(counts[IDX_NINGUNA]/tot*100):0;
+      const otraPct=tot>0?Math.round(counts[IDX_OTRA]/tot*100):0;
+
+      const ningBar=`<div class="bar-item">
+        <div class="bar-labels">
+          <div class="bar-label" style="color:var(--muted)">— Ninguna de las anteriores</div>
+          <div class="bar-right"><div class="bar-pct" style="color:var(--g400)">${ningPct}%</div><div class="bar-cnt">${counts[IDX_NINGUNA]}</div></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill none-fill" style="width:${ningPct}%"></div></div>
+      </div>`;
+
+      const otraBar=`<div class="bar-item">
+        <div class="bar-labels">
+          <div class="bar-label" style="color:var(--t600)">+ Otra (propuesta libre)</div>
+          <div class="bar-right"><div class="bar-pct" style="color:var(--t400)">${otraPct}%</div><div class="bar-cnt">${counts[IDX_OTRA]}</div></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill otra-fill" style="width:${otraPct}%"></div></div>
+      </div>`;
+
+      const open=gi===0;
+      return`<div class="eje-card">
+        <div class="eje-head" onclick="toggleEje(${gi})">
+          <div class="eje-head-icon">${eje.icon}</div>
+          <div class="eje-head-info">
+            <div class="eje-head-title">Eje ${eje.id}: ${eje.title}</div>
+            <div class="eje-head-votes">${tot} votos registrados</div>
+          </div>
+          <div class="eje-chev${open?' open':''}" id="chev-${gi}">▾</div>
+        </div>
+        <div class="eje-body${open?' open':''}" id="ejebody-${gi}">${propBars}${ningBar}${otraBar}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Propuestas sugeridas
+  renderSugeridas(votan);
+}
+
+function toggleQueue(){
+  const list=document.getElementById('queue-list');
+  const chev=document.getElementById('queue-chev');
+  const open=list.style.display==='none';
+  list.style.display=open?'block':'none';
+  chev.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+}
+
+function renderSugeridas(votan){
+  let haySugeridas=false;
+  const html=EJES.map((eje,gi)=>{
+    const sugs=[];
+    votan.forEach(p=>{
+      if(p.otrasProps&&p.otrasProps[eje.id]){
+        sugs.push({texto:p.otrasProps[eje.id],nombre:p.nombre,municipio:p.municipio});
+      }
+    });
+    if(sugs.length===0) return'';
+    haySugeridas=true;
+    const items=sugs.map(s=>`
+      <div class="sug-item">
+        <div>
+          <div class="sug-texto">${escHtml(s.texto)}</div>
+          <div class="sug-meta">${s.nombre} · ${s.municipio}</div>
+        </div>
+      </div>`).join('');
+    return`<div class="sug-eje">
+      <div class="sug-head" onclick="toggleSug(${gi})">
+        <div class="sug-head-icon">${eje.icon}</div>
+        <div class="sug-head-title">Eje ${eje.id}: ${eje.title}</div>
+        <span class="sug-count">${sugs.length}</span>
+      </div>
+      <div class="sug-body" id="sugbody-${gi}">${items}</div>
+    </div>`;
+  }).join('');
+
+  const sec=document.getElementById('sugeridas-section');
+  const cont=document.getElementById('sugeridas-content');
+  if(haySugeridas){sec.style.display='block';cont.innerHTML=html;}
+  else sec.style.display='none';
+}
+
+function escHtml(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleEje(gi){
+  document.getElementById('ejebody-'+gi).classList.toggle('open');
+  document.getElementById('chev-'+gi).classList.toggle('open');
+}
+
+function toggleSug(gi){
+  document.getElementById('sugbody-'+gi).classList.toggle('open');
+}
+
+// ── INIT ──────────────────────────────────────────────
+(function(){
+  const cfg=loadConfig();
+  if(cfg) initFirebase(cfg);
+  else {
+    try{const s=localStorage.getItem('avion_local');if(s)participantes=JSON.parse(s)||{};}catch(e){}
+    setInterval(()=>{
+      if(!db){
+        try{localStorage.setItem('avion_local',JSON.stringify(participantes));}catch(e){}
+      }
+    },5000);
+  }
+})();
+</script>
+</body>
+</html>
