@@ -350,11 +350,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="card-title">👤 Registro del participante</div>
         <div class="field">
           <label>NOMBRE</label>
-          <input type="text" id="reg-nombre" placeholder="Ej: María" autocomplete="given-name">
+          <input type="text" id="reg-nombre" placeholder="Ej: María" autocomplete="given-name" oninput="this.value=toTitleCase(this.value)">
         </div>
         <div class="field">
           <label>CORREO ELECTRÓNICO <span class="optional-tag">(opcional)</span></label>
-          <input type="email" id="reg-email" placeholder="tucorreo@email.com" autocomplete="email">
+          <input type="email" id="reg-email" placeholder="tucorreo@email.com" autocomplete="email" oninput="this.value=this.value.toLowerCase()">
           <div class="field-note">Solo si quieres hacer parte del equipo progresista.</div>
         </div>
         <div class="field">
@@ -647,9 +647,10 @@ function toTitleCase(str){
 }
 
 function toSentenceCase(str){
+  // Solo garantiza que la primera letra sea mayúscula
+  // No fuerza minúsculas en el resto — respeta si el usuario activa CAPS
   if(!str) return str;
-  const s=str.trim().toLowerCase();
-  return s.charAt(0).toUpperCase()+s.slice(1);
+  return str.charAt(0).toUpperCase()+str.slice(1);
 }
 
 // ── FIREBASE ──────────────────────────────────────────
