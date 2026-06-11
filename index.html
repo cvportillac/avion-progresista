@@ -359,6 +359,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             oninput="this.value=toTitleCase(this.value)">
         </div>
         <div class="field">
+          <label>SECTOR O BARRIO <span class="optional-tag">(opcional)</span></label>
+          <input type="text" id="reg-barrio" placeholder="Ej: La Merced" autocomplete="off"
+            oninput="this.value=toTitleCase(this.value)">
+        </div>
+        <div class="field">
           <label>RANGO DE EDAD</label>
           <select id="reg-edad">
             <option value="">Selecciona tu rango...</option>
@@ -574,8 +579,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div id="modal" class="modal-bg" style="display:none" onclick="bgClick(event)">
   <div class="modal" id="modal-inner">
     <div class="modal-handle"></div>
-    <div class="modal-eje" id="modal-title"></div>
-    <div class="modal-sub">¿Cuál propuesta te representa más?</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div id="modal-casilla-badge" style="background:var(--ph-azul);color:#fff;font-size:11px;font-weight:600;padding:3px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0"></div>
+      <div class="modal-eje" id="modal-title" style="margin-bottom:0;font-size:15px"></div>
+    </div>
+    <div class="modal-sub">De las propuestas de <strong style="color:var(--ph-azul)">Iván Cepeda</strong> y <strong style="color:var(--ph-morado)">Aída Quilcué</strong>, ¿cuál te representa más?</div>
     <div id="modal-opts"></div>
     <div class="otra-input-wrap" id="otra-wrap">
       <input type="text" class="otra-input" id="otra-input" placeholder="Escribe tu propuesta aquí..."
@@ -583,12 +591,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn-confirm" onclick="confirmarVoto()">Confirmar ✓</button>
+      <button class="btn-confirm" onclick="confirmarVoto()">Confirmar y avanzar</button>
     </div>
   </div>
 </div>
 
 <script>
+const EJE_COLORS=['#003DA5','#E31837','#F47920','#00923F','#6A2D8F','#F5C400','#E31837','#003DA5','#00923F'];
 const EJES=[
   {id:1,icon:"🔍",title:"Lucha contra la corrupción",
    props:["Sistema Nacional contra la Corrupción con capacidad sancionatoria real","Proteger a denunciantes y testigos","Más transparencia en la contratación pública"]},
@@ -763,7 +772,8 @@ async function enviarRegistro(){
   if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('El correo ingresado no es válido.');return}
 
   const id=Date.now();
-  const p={id,nombre:nom,email:email||'',municipio:toTitleCase(mun),edad,genero,
+  const barrio=document.getElementById('reg-barrio').value.trim();
+  const p={id,nombre:nom,email:email||'',municipio:toTitleCase(mun),barrio:toTitleCase(barrio)||'',edad,genero,
            estado:'pendiente',votos:{},otrasProps:{},completado:false,ts:new Date().toISOString()};
   await dbSet(id.toString(),p);
   participantes[id]=p;
@@ -837,16 +847,30 @@ function renderGrid(){
   const done2=Object.keys(current.votos).length;
   if(done2===9&&!current.completado){
     current.completado=true;
-    dbSet(current.id+'/completado',true);
+    // Guardar todo el registro completo con completado:true de forma robusta
+    const fullRecord={...current, completado:true};
+    participantes[current.id]=fullRecord;
+    if(db){
+      dbRef.child(current.id.toString()).set(fullRecord).catch(e=>console.error('Error guardando:',e));
+    } else {
+      try{localStorage.setItem('avion_local',JSON.stringify(participantes));}catch(e){}
+    }
     const num=Object.values(participantes).filter(p=>p.completado).length;
+    const nombre=current.nombre||'Participante';
     document.getElementById('meta-container').innerHTML=`
-      <div class="meta-card">
-        <span class="meta-trophy">🏆</span>
-        <div class="meta-title">¡Llegaste a la meta!</div>
-        <p style="font-size:13px;color:var(--muted);margin:6px 0 12px">Gracias ${current.nombre}, tus preferencias quedan registradas.</p>
-        <div class="meta-num">#${num}</div>
-        <p style="font-size:11px;color:var(--muted);margin:4px 0 16px">participante completado</p>
-        <button class="btn-primary" style="max-width:240px;margin:0 auto;display:block" onclick="nuevoParticipante()">Siguiente participante →</button>
+      <div class="meta-card" style="padding:28px 20px">
+        <span class="meta-trophy">🎉</span>
+        <div class="meta-title" style="font-size:22px;margin-bottom:8px">¡Llegaste a la meta!</div>
+        <p style="font-size:17px;font-weight:600;color:var(--ph-azul);margin-bottom:4px">¡Felicitaciones, ${nombre}!</p>
+        <p style="font-size:14px;color:var(--text);line-height:1.6;margin:8px 0 16px;padding:12px;background:var(--p50);border-radius:var(--rads)">
+          Te invitamos para que este <strong style="color:var(--ph-rojo)">21 de junio</strong> votes por<br>
+          <strong style="color:var(--ph-azul);font-size:16px">Iván Cepeda</strong>
+          <span style="color:var(--muted)"> &amp; </span>
+          <strong style="color:var(--ph-morado);font-size:16px">Aída Quilcué</strong>
+        </p>
+        <div class="meta-num" style="color:var(--ph-verde)">#${num}</div>
+        <p style="font-size:11px;color:var(--muted);margin:4px 0 20px">participante registrado</p>
+        <button class="btn-primary" style="max-width:260px;margin:0 auto;display:block" onclick="nuevoParticipante()">Siguiente participante →</button>
       </div>`;
   } else if(done2<9){
     document.getElementById('meta-container').innerHTML='';
@@ -862,6 +886,13 @@ function updateProgress(){
 function openModal(ejeId){
   const eje=EJES.find(e=>e.id===ejeId);
   currentEje=ejeId; selectedProp=null;
+  // Badge casilla número
+  const badge=document.getElementById('modal-casilla-badge');
+  if(badge){
+    badge.textContent='Casilla '+ejeId+' de 9';
+    badge.style.background=EJE_COLORS[ejeId-1]||'var(--ph-azul)';
+    badge.style.color=ejeId===6?'#1a1a1a':'#fff';
+  }
   document.getElementById('modal-title').textContent=eje.icon+' '+eje.title;
   document.getElementById('otra-input').value='';
   document.getElementById('otra-wrap').classList.remove('visible');
@@ -935,7 +966,7 @@ function nuevoParticipante(){
   current=null; esperaId=null;
   document.getElementById('view-juego').style.display='none';
   document.getElementById('view-registro').style.display='block';
-  ['reg-nombre','reg-email','reg-municipio'].forEach(id=>document.getElementById(id).value='');
+  ['reg-nombre','reg-email','reg-municipio','reg-barrio'].forEach(id=>document.getElementById(id).value='');
   ['reg-edad','reg-genero'].forEach(id=>document.getElementById(id).value='');
 }
 
@@ -1046,7 +1077,7 @@ function renderDashboard(){
         <div class="queue-avatar">${ini}</div>
         <div class="queue-info">
           <div class="queue-name">${p.nombre}</div>
-          <div class="queue-meta">${p.municipio} · ${p.edad} · ${p.genero}</div>
+          <div class="queue-meta">${p.municipio}${p.barrio?' · '+p.barrio:''} · ${p.edad} · ${p.genero}</div>
           ${emailStr}
         </div>
         <div class="queue-actions">
