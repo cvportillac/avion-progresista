@@ -1162,19 +1162,15 @@ function toggleSug(gi){
 
 // ── INIT ──────────────────────────────────────────────
 (function(){
-  // Config Firebase incrustado — conecta automáticamente en todos los dispositivos
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyC0ONwWRo377v5X9UNNdfXLSB1WC7cU_e0",
-    authDomain: "avion-progresista.firebaseapp.com",
-    databaseURL: "https://avion-progresista-default-rtdb.firebaseio.com",
-    projectId: "avion-progresista",
-    storageBucket: "avion-progresista.firebasestorage.app",
-    messagingSenderId: "1000377993071",
-    appId: "1:1000377993071:web:010bd6564480cb0859ca9a"
-  };
-  // Intentar primero config manual guardada, sino usar la incrustada
   const saved = loadConfig();
-  initFirebase(saved || FIREBASE_CONFIG);
+  if(saved){
+    initFirebase(saved);
+  } else {
+    try{const s=localStorage.getItem('avion_local');if(s)participantes=JSON.parse(s)||{};}catch(e){}
+    setInterval(()=>{
+      if(!db){try{localStorage.setItem('avion_local',JSON.stringify(participantes));}catch(e){}}
+    },5000);
+  }
 })();
 </script>
 </body>
