@@ -249,6 +249,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hbar-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
 .hbar-fill{height:8px;border-radius:4px;transition:width .5s}
 .hbar-val{font-size:11px;color:var(--muted);width:28px;text-align:right;flex-shrink:0}
+.filter-chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid;transition:all .15s;font-family:var(--font);white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.filter-chip.active{color:#fff}
+.filter-chip.inactive{background:transparent!important}
+.filter-all{padding:4px 8px;border-radius:20px;font-size:11px;cursor:pointer;border:.5px solid var(--bord);background:var(--bg);color:var(--muted);font-family:var(--font)}
 </style>
 </head>
 <body>
@@ -438,13 +442,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <div id="chart-edad"></div>
           </div>
         </div>
-        <div class="card" style="margin-top:12px">
-          <div class="card-title" style="font-size:13px;margin-bottom:10px">Municipios y ciudades</div>
-          <div id="chart-municipio"></div>
-        </div>
-        <div class="card" id="card-sector" style="margin-top:12px;display:none">
-          <div class="card-title" style="font-size:13px;margin-bottom:10px">Sectores y barrios</div>
-          <div id="chart-sector"></div>
+        <div class="card" id="card-lugar" style="margin-top:12px;display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="card-title" style="font-size:13px;margin-bottom:0">Municipio / Ciudad y Sector</div>
+            <button id="toggle-lugar" onclick="toggleChart('lugar')"
+              style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font);border:1.5px solid #003DA5;background:#003DA5;color:#fff;white-space:nowrap">
+              ✓ Visible
+            </button>
+          </div>
+          <div id="chart-lugar-wrap">
+            <div id="chart-lugar"></div>
+          </div>
         </div>
       </div>
 
@@ -1070,6 +1078,72 @@ function renderHBar(containerId, data, color){
   }).join('');
 }
 
+// ── TOGGLE CHARTS ─────────────────────────────────────
+const chartVisible = { lugar: true };
+const CHART_COLORS = { lugar:'#003DA5' };
+
+function toggleChart(type){
+  chartVisible[type] = !chartVisible[type];
+  const wrap = document.getElementById('chart-'+type+'-wrap');
+  const btn  = document.getElementById('toggle-'+type);
+  const color = CHART_COLORS[type]||'#003DA5';
+  if(chartVisible[type]){
+    wrap.style.display = 'block';
+    btn.style.background = color;
+    btn.style.color = '#fff';
+    btn.textContent = '✓ Visible';
+  } else {
+    wrap.style.display = 'none';
+    btn.style.background = 'transparent';
+    btn.style.color = color;
+    btn.textContent = 'Oculto';
+  }
+}
+
+function renderFilterableBar(type, data, color){
+  renderHBar('chart-'+type, data, color);
+  const wrap = document.getElementById('chart-'+type+'-wrap');
+  if(wrap) wrap.style.display = chartVisible[type]!==false ? 'block' : 'none';
+}
+
+function renderLugarChart(munMap){
+  const el = document.getElementById('chart-lugar');
+  if(!el) return;
+  // Sort municipios by total desc
+  const sorted = Object.entries(munMap).sort((a,b)=>b[1].total-a[1].total);
+  const maxVal = Math.max(...sorted.map(([,v])=>v.total), 1);
+  let html = '';
+  sorted.forEach(([mun, data])=>{
+    const pct = Math.round(data.total/maxVal*100);
+    // Municipio row
+    html += `<div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="font-size:12px;font-weight:600;color:var(--ph-azul);min-width:0;flex:1">${mun}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--ph-azul);flex-shrink:0">${data.total}</div>
+      </div>
+      <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:5px">
+        <div style="height:8px;background:var(--ph-azul);border-radius:4px;width:${pct}%;transition:width .5s"></div>
+      </div>`;
+    // Sector rows indented
+    const sectorsSorted = Object.entries(data.sectores).sort((a,b)=>b[1]-a[1]);
+    if(sectorsSorted.length>0){
+      sectorsSorted.forEach(([sec, cnt])=>{
+        const spct = Math.round(cnt/data.total*100);
+        html += `<div style="display:flex;align-items:center;gap:8px;padding-left:16px;margin-bottom:4px">
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--ph-morado);flex-shrink:0;margin-top:1px"></div>
+          <div style="font-size:11px;color:var(--muted);flex:1;min-width:0">${sec}</div>
+          <div style="font-size:10px;color:var(--ph-morado);flex-shrink:0">${cnt} (${spct}%)</div>
+          <div style="width:60px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;flex-shrink:0">
+            <div style="height:5px;background:var(--ph-morado);border-radius:3px;width:${spct}%;opacity:0.7"></div>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
 // ── DASHBOARD ─────────────────────────────────────────
 function renderDashboard(){
   const list=Object.values(participantes);
@@ -1136,19 +1210,24 @@ function renderDashboard(){
     // Municipio
     const mcounts={};
     aprobados.forEach(p=>{if(p.municipio) mcounts[p.municipio]=(mcounts[p.municipio]||0)+1;});
-    const mdata=Object.entries(mcounts).map(([label,value])=>({label,value}));
-    renderHBar('chart-municipio', mdata, '#003DA5');
-
-    // Sector/Barrio chart
-    const scounts={};
-    aprobados.forEach(p=>{if(p.barrio&&p.barrio.trim()) scounts[p.barrio]=(scounts[p.barrio]||0)+1;});
-    const sdata=Object.entries(scounts).map(([label,value])=>({label,value}));
-    const cardSector=document.getElementById('card-sector');
-    if(sdata.length>0){
-      cardSector.style.display='block';
-      renderHBar('chart-sector', sdata, '#6A2D8F');
+    // Hierarchical Municipio → Sector chart
+    const munMap = {}; // { municipio: { total, sectores: { sector: count } } }
+    aprobados.forEach(p=>{
+      if(!p.municipio) return;
+      const mun = p.municipio.trim();
+      const sec = (p.barrio||'').trim();
+      if(!munMap[mun]) munMap[mun]={total:0, sectores:{}};
+      munMap[mun].total++;
+      if(sec){
+        munMap[mun].sectores[sec]=(munMap[mun].sectores[sec]||0)+1;
+      }
+    });
+    const cardLugar=document.getElementById('card-lugar');
+    if(Object.keys(munMap).length>0){
+      cardLugar.style.display='block';
+      renderLugarChart(munMap);
     } else {
-      cardSector.style.display='none';
+      cardLugar.style.display='none';
     }
   } else {
     demoSec.style.display='none';
